@@ -142,4 +142,4 @@ class SysmonFileDetector:
             ),
 
             "user": parsed.user,
-        }
+        }   
