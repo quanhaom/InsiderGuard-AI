@@ -1,0 +1,240 @@
+[1mdiff --git a/backend/app/__pycache__/main.cpython-314.pyc b/backend/app/__pycache__/main.cpython-314.pyc[m
+[1mindex 31e3b9b..62b21ba 100644[m
+Binary files a/backend/app/__pycache__/main.cpython-314.pyc and b/backend/app/__pycache__/main.cpython-314.pyc differ
+[1mdiff --git a/backend/app/modules/collector/__pycache__/dispatcher.cpython-314.pyc b/backend/app/modules/collector/__pycache__/dispatcher.cpython-314.pyc[m
+[1mindex 91d8054..a31397e 100644[m
+Binary files a/backend/app/modules/collector/__pycache__/dispatcher.cpython-314.pyc and b/backend/app/modules/collector/__pycache__/dispatcher.cpython-314.pyc differ
+[1mdiff --git a/backend/app/modules/collector/__pycache__/service.cpython-314.pyc b/backend/app/modules/collector/__pycache__/service.cpython-314.pyc[m
+[1mindex 494f0d0..808f9ce 100644[m
+Binary files a/backend/app/modules/collector/__pycache__/service.cpython-314.pyc and b/backend/app/modules/collector/__pycache__/service.cpython-314.pyc differ
+[1mdiff --git a/backend/app/modules/collector/dispatcher.py b/backend/app/modules/collector/dispatcher.py[m
+[1mindex 40e7d2e..7a95fba 100644[m
+[1m--- a/backend/app/modules/collector/dispatcher.py[m
+[1m+++ b/backend/app/modules/collector/dispatcher.py[m
+[36m@@ -1,8 +1,65 @@[m
+[32m+[m[32mfrom sqlalchemy.orm import Session[m
+[32m+[m
+[32m+[m[32mfrom app.modules.collector.windows_mapper import ([m
+[32m+[m[32m    WindowsEventMapper,[m
+[32m+[m[32m)[m
+[32m+[m[32mfrom app.modules.events.service import EventService[m
+ from app.schemas.collector import CollectorEvent[m
+ [m
+ [m
+ class EventDispatcher:[m
+ [m
+     @staticmethod[m
+[31m-    def dispatch(event: CollectorEvent):[m
+[31m-        raise NotImplementedError[m
+\ No newline at end of file[m
+[32m+[m[32m    def dispatch([m
+[32m+[m[32m        db: Session,[m
+[32m+[m[32m        event: CollectorEvent[m
+[32m+[m[32m    ) -> dict:[m
+[32m+[m[32m        if event.source == "windows-security":[m
+[32m+[m[32m            return EventDispatcher._dispatch_windows_security([m
+[32m+[m[32m                db=db,[m
+[32m+[m[32m                event=event[m
+[32m+[m[32m            )[m
+[32m+[m
+[32m+[m[32m        return {[m
+[32m+[m[32m            "status": "ignored",[m
+[32m+[m[32m            "event_id": event.event_id,[m
+[32m+[m[32m            "handler": "none",[m
+[32m+[m[32m            "message": ([m
+[32m+[m[32m                f"Unsupported collector source: {event.source}"[m
+[32m+[m[32m            )[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m    @staticmethod[m
+[32m+[m[32m    def _dispatch_windows_security([m
+[32m+[m[32m        db: Session,[m
+[32m+[m[32m        event: CollectorEvent[m
+[32m+[m[32m    ) -> dict:[m
+[32m+[m[32m        if event.event_id == 4624:[m
+[32m+[m[32m            payload = WindowsEventMapper.map_login_event([m
+[32m+[m[32m                event[m
+[32m+[m[32m            )[m
+[32m+[m
+[32m+[m[32m            saved_event = EventService.create_login_event([m
+[32m+[m[32m                db=db,[m
+[32m+[m[32m                payload=payload[m
+[32m+[m[32m            )[m
+[32m+[m
+[32m+[m[32m            return {[m
+[32m+[m[32m                "status": "accepted",[m
+[32m+[m[32m                "event_id": event.event_id,[m
+[32m+[m[32m                "handler": "windows_login_success",[m
+[32m+[m[32m                "message": ([m
+[32m+[m[32m                    f"Login event saved with ID "[m
+[32m+[m[32m                    f"{saved_event.id}"[m
+[32m+[m[32m                )[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m        return {[m
+[32m+[m[32m            "status": "ignored",[m
+[32m+[m[32m            "event_id": event.event_id,[m
+[32m+[m[32m            "handler": "none",[m
+[32m+[m[32m            "message": ([m
+[32m+[m[32m                f"No handler registered for Windows "[m
+[32m+[m[32m                f"Event ID {event.event_id}"[m
+[32m+[m[32m            )[m
+[32m+[m[32m        }[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/app/modules/collector/router.py b/backend/app/modules/collector/router.py[m
+[1mindex f8fa698..463baa5 100644[m
+[1m--- a/backend/app/modules/collector/router.py[m
+[1m+++ b/backend/app/modules/collector/router.py[m
+[36m@@ -1,6 +1,36 @@[m
+[31m-from fastapi import APIRouter[m
+[32m+[m[32mfrom fastapi import APIRouter, Depends, HTTPException[m
+[32m+[m[32mfrom sqlalchemy.orm import Session[m
+[32m+[m
+[32m+[m[32mfrom app.db.dependencies import get_db[m
+[32m+[m[32mfrom app.modules.collector.service import CollectorService[m
+[32m+[m[32mfrom app.schemas.collector import ([m
+[32m+[m[32m    CollectorEvent,[m
+[32m+[m[32m    CollectorEventResponse,[m
+[32m+[m[32m)[m
+[32m+[m
+ [m
+ router = APIRouter([m
+     prefix="/collector",[m
+     tags=["Collector"][m
+[31m-)[m
+\ No newline at end of file[m
+[32m+[m[32m)[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@router.post([m
+[32m+[m[32m    "/events",[m
+[32m+[m[32m    response_model=CollectorEventResponse[m
+[32m+[m[32m)[m
+[32m+[m[32mdef ingest_collector_event([m
+[32m+[m[32m    event: CollectorEvent,[m
+[32m+[m[32m    db: Session = Depends(get_db)[m
+[32m+[m[32m):[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        return CollectorService.ingest([m
+[32m+[m[32m            db=db,[m
+[32m+[m[32m            event=event[m
+[32m+[m[32m        )[m
+[32m+[m
+[32m+[m[32m    except ValueError as error:[m
+[32m+[m[32m        raise HTTPException([m
+[32m+[m[32m            status_code=400,[m
+[32m+[m[32m            detail=str(error)[m
+[32m+[m[32m        ) from error[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/app/modules/collector/service.py b/backend/app/modules/collector/service.py[m
+[1mindex 12ae175..c637f84 100644[m
+[1m--- a/backend/app/modules/collector/service.py[m
+[1m+++ b/backend/app/modules/collector/service.py[m
+[36m@@ -1,3 +1,5 @@[m
+[32m+[m[32mfrom sqlalchemy.orm import Session[m
+[32m+[m
+ from app.modules.collector.dispatcher import EventDispatcher[m
+ from app.schemas.collector import CollectorEvent[m
+ [m
+[36m@@ -5,5 +7,11 @@[m [mfrom app.schemas.collector import CollectorEvent[m
+ class CollectorService:[m
+ [m
+     @staticmethod[m
+[31m-    def ingest(event: CollectorEvent):[m
+[31m-        return EventDispatcher.dispatch(event)[m
+\ No newline at end of file[m
+[32m+[m[32m    def ingest([m
+[32m+[m[32m        db: Session,[m
+[32m+[m[32m        event: CollectorEvent[m
+[32m+[m[32m    ) -> dict:[m
+[32m+[m[32m        return EventDispatcher.dispatch([m
+[32m+[m[32m            db=db,[m
+[32m+[m[32m            event=event[m
+[32m+[m[32m        )[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/app/modules/collector/windows_mapper.py b/backend/app/modules/collector/windows_mapper.py[m
+[1mindex e69de29..b9544d3 100644[m
+[1m--- a/backend/app/modules/collector/windows_mapper.py[m
+[1m+++ b/backend/app/modules/collector/windows_mapper.py[m
+[36m@@ -0,0 +1,31 @@[m
+[32m+[m[32mfrom app.schemas.collector import CollectorEvent[m
+[32m+[m[32mfrom app.schemas.login_event import LoginEventCreate[m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass WindowsEventMapper:[m
+[32m+[m
+[32m+[m[32m    @staticmethod[m
+[32m+[m[32m    def map_login_event([m
+[32m+[m[32m        event: CollectorEvent[m
+[32m+[m[32m    ) -> LoginEventCreate:[m
+[32m+[m[32m        username = str([m
+[32m+[m[32m            event.payload.get("username", "")[m
+[32m+[m[32m        ).strip()[m
+[32m+[m
+[32m+[m[32m        source_ip = str([m
+[32m+[m[32m            event.payload.get("source_ip", "")[m
+[32m+[m[32m        ).strip()[m
+[32m+[m
+[32m+[m[32m        if not username:[m
+[32m+[m[32m            raise ValueError([m
+[32m+[m[32m                "Windows event payload is missing username"[m
+[32m+[m[32m            )[m
+[32m+[m
+[32m+[m[32m        if not source_ip or source_ip == "-":[m
+[32m+[m[32m            source_ip = "127.0.0.1"[m
+[32m+[m
+[32m+[m[32m        return LoginEventCreate([m
+[32m+[m[32m            username=username,[m
+[32m+[m[32m            source_ip=source_ip,[m
+[32m+[m[32m            login_time=event.timestamp[m
+[32m+[m[32m        )[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/app/schemas/__pycache__/collector.cpython-314.pyc b/backend/app/schemas/__pycache__/collector.cpython-314.pyc[m
+[1mindex bf13bb1..9b829b8 100644[m
+Binary files a/backend/app/schemas/__pycache__/collector.cpython-314.pyc and b/backend/app/schemas/__pycache__/collector.cpython-314.pyc differ
+[1mdiff --git a/backend/app/schemas/collector.py b/backend/app/schemas/collector.py[m
+[1mindex c106ea3..13406ba 100644[m
+[1m--- a/backend/app/schemas/collector.py[m
+[1m+++ b/backend/app/schemas/collector.py[m
+[36m@@ -19,4 +19,11 @@[m [mclass CollectorEvent(BaseModel):[m
+ [m
+     timestamp: datetime[m
+ [m
+[31m-    payload: dict[str, Any][m
+\ No newline at end of file[m
+[32m+[m[32m    payload: dict[str, Any][m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass CollectorEventResponse(BaseModel):[m
+[32m+[m[32m    status: str[m
+[32m+[m[32m    event_id: int[m
+[32m+[m[32m    handler: str[m
+[32m+[m[32m    message: str[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/requirements.txt b/backend/requirements.txt[m
+[1mindex eaf669f..b39a9cc 100644[m
+Binary files a/backend/requirements.txt and b/backend/requirements.txt differ
+[1mdiff --git a/scripts/test_db.py b/scripts/test_db.py[m
+[1mdeleted file mode 100644[m
+[1mindex b47c8b5..0000000[m
+[1m--- a/scripts/test_db.py[m
+[1m+++ /dev/null[m
+[36m@@ -1,17 +0,0 @@[m
+[31m-import psycopg2[m
+[31m-[m
+[31m-try:[m
+[31m-    conn = psycopg2.connect([m
+[31m-        host="localhost",[m
+[31m-        port=5432,[m
+[31m-        user="postgres",[m
+[31m-        password="YOUR_PASSWORD",[m
+[31m-        dbname="postgres"[m
+[31m-    )[m
+[31m-[m
+[31m-    print("CONNECTED")[m
+[31m-[m
+[31m-    conn.close()[m
+[31m-[m
+[31m-except Exception as e:[m
+[31m-    print("ERROR:", e)[m
+\ No newline at end of file[m

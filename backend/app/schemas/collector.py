@@ -20,3 +20,10 @@ class CollectorEvent(BaseModel):
     timestamp: datetime
 
     payload: dict[str, Any]
+
+
+class CollectorEventResponse(BaseModel):
+    status: str
+    event_id: int
+    handler: str
+    message: str
