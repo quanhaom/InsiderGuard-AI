@@ -12,6 +12,9 @@ from app.modules.incidents.router import (
 from app.modules.evidence.router import (
     router as evidence_router,
 )
+from app.modules.blockchain.router import (
+    router as blockchain_router,
+)
 
 app = FastAPI(
     title="InsiderGuard AI",
@@ -25,6 +28,11 @@ app.include_router(
 
 app.include_router(
     events_router,
+    prefix="/api/v1"
+)
+
+app.include_router(
+    blockchain_router,
     prefix="/api/v1"
 )
 
