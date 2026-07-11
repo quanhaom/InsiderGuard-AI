@@ -10,6 +10,7 @@ from app.models.incident import Incident
 from alembic import context
 from app.models.evidence import Evidence
 from app.models.blockchain_block import BlockchainBlock
+from app.models.investigation_report import InvestigationReport
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
