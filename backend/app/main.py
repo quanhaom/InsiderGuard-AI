@@ -6,7 +6,12 @@ from app.modules.behavior_twin.router import (
 from app.modules.events.router import (
     router as events_router,
 )
-
+from app.modules.incidents.router import (
+    router as incidents_router,
+)
+from app.modules.evidence.router import (
+    router as evidence_router,
+)
 
 app = FastAPI(
     title="InsiderGuard AI",
@@ -27,7 +32,14 @@ app.include_router(
     behavior_twin_router,
     prefix="/api/v1"
 )
-
+app.include_router(
+    incidents_router,
+    prefix="/api/v1"
+)
+app.include_router(
+    evidence_router,
+    prefix="/api/v1"
+)
 
 @app.get("/")
 def root():

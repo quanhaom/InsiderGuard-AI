@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.login_event import LoginEvent
 from app.models.risk_assessment import RiskAssessment
+from app.modules.incidents.service import IncidentService
 from app.modules.ueba.risk_engine import RiskEngine
 from app.repositories.behavior_profile_repository import (
     BehaviorProfileRepository,
@@ -51,10 +52,17 @@ class UebaService:
             )
         )
 
-        return RiskRepository.create(
+        saved_assessment = RiskRepository.create(
             db=db,
             assessment=assessment
         )
+
+        IncidentService.create_from_risk_assessment(
+            db=db,
+            assessment=saved_assessment
+        )
+
+        return saved_assessment
 
     @staticmethod
     def get_latest(
