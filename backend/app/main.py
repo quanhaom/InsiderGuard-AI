@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+from app.modules.ueba.router import router as ueba_router
 from app.modules.behavior_twin.router import (
     router as behavior_twin_router,
 )
@@ -13,6 +13,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.include_router(
+    ueba_router,
+    prefix="/api/v1"
+)
 
 app.include_router(
     events_router,
