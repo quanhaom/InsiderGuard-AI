@@ -1,38 +1,33 @@
-        Windows Agent
-                   Linux Agent
-                     Sysmon
-                  File Monitor
-                    USB Monitor
-                     Email Logs
-                         │
-                         │
-                Event Collector API
-                         │
-                         ▼
-                PostgreSQL (Raw Events)
-                         │
-      ┌──────────────────┼──────────────────┐
-      ▼                  ▼                  ▼
- Behavior Twin      UEBA Engine       Event Correlation
-      │                  │                  │
-      └──────────────┬───┘                  │
-                     ▼                      │
-               Risk Assessment             │
-                     │                      │
-                     ▼                      │
-                 Incident Engine────────────┘
-                     │
-                     ▼
-               Evidence Vault
-                     │
-                     ▼
-               SHA256 Generator
-                     │
-                     ▼
-            Blockchain Audit Chain
-                     │
-                     ▼
-             AI Investigation Report
-                     │
-                     ▼
-                SOC Dashboard
+               Windows
+                   │
+                Linux
+                   │
+                Sysmon
+                   │
+              Azure AD
+                   │
+            Microsoft 365
+                   │
+            ┌──────────────┐
+            │ Collector API│
+            └──────┬───────┘
+                   │
+             Event Dispatcher
+                   │
+         ┌─────────┴─────────┐
+         ▼                   ▼
+     Behavior Twin        UEBA Engine
+         │                   │
+         └─────────┬─────────┘
+                   ▼
+              Risk Engine
+                   │
+                   ▼
+          Incident Management
+                   │
+         ┌─────────┴─────────┐
+         ▼                   ▼
+      Evidence          Blockchain
+                   │
+                   ▼
+            AI Investigator
