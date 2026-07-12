@@ -17,8 +17,7 @@ EVENT_NAMESPACE = (
 
 class WindowsCollector(BaseCollector):
 
-    QUERY = "*[System[(EventID=4624)]]"
-
+    QUERY = "*[System[(EventID=4624 or EventID=4625)]]"
     BATCH_SIZE = 50
 
 

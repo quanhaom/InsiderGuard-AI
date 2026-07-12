@@ -12,6 +12,7 @@ from app.models.evidence import Evidence
 from app.models.blockchain_block import BlockchainBlock
 from app.models.investigation_report import InvestigationReport
 from app.models.raw_windows_event import RawWindowsEvent
+from app.models.failed_login_event import FailedLoginEvent
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
