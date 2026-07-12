@@ -1,33 +1,57 @@
-               Windows
-                   │
-                Linux
-                   │
-                Sysmon
-                   │
-              Azure AD
-                   │
-            Microsoft 365
-                   │
-            ┌──────────────┐
-            │ Collector API│
-            └──────┬───────┘
-                   │
-             Event Dispatcher
-                   │
-         ┌─────────┴─────────┐
-         ▼                   ▼
-     Behavior Twin        UEBA Engine
-         │                   │
-         └─────────┬─────────┘
-                   ▼
-              Risk Engine
-                   │
-                   ▼
-          Incident Management
-                   │
-         ┌─────────┴─────────┐
-         ▼                   ▼
-      Evidence          Blockchain
-                   │
-                   ▼
-            AI Investigator
+                  Windows Endpoint
+                         │
+                Windows Event Log
+                         │
+                         ▼
+                Windows Collector
+                         │
+                 Offline Queue
+                         │
+                         ▼
+────────────────────────────────────────────────────
+
+                    FastAPI Backend
+
+        Collector API (/collector/events)
+                         │
+                         ▼
+                Raw Event Storage
+                         │
+                         ▼
+                 Parser Engine
+                         │
+                         ▼
+              Normalized Event Model
+                         │
+                         ▼
+                  Rule Engine
+                         │
+             ┌───────────┴────────────┐
+             ▼                        ▼
+       Risk Hint              Detection Alert
+             │
+             ▼
+              Event Dispatcher
+                         │
+     ┌───────────┬───────────┬───────────┐
+     ▼           ▼           ▼
+ Login      Process      File Access
+ Service      Service        Service
+     │
+     ▼
+ Behavior Twin
+     │
+     ▼
+ UEBA Engine
+     │
+     ▼
+ Incident Engine
+     │
+     ▼
+ Evidence Engine
+     │
+     ▼
+ Blockchain Integrity
+     │
+     ▼
+ AI Investigation

@@ -6,7 +6,10 @@ from app.models.login_event import LoginEvent
 from app.models.behavior_profile import BehaviorProfile
 from app.models.risk_assessment import RiskAssessment
 from app.models.incident import Incident
-
+from app.models.raw_windows_event import RawWindowsEvent
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+if __name__ == "__main__":
+    init_db()
+    print("Database initialized successfully")    

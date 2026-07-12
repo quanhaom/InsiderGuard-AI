@@ -4,18 +4,36 @@ from typing import Any
 
 
 @dataclass(slots=True)
+@dataclass
 class RawWindowsEvent:
+
     record_id: int
+
     event_id: int
+
     computer: str
+
+    provider: str
+
     timestamp: datetime
+
     xml: str
 
-
-@dataclass(slots=True)
+@dataclass
 class CollectorEvent:
+
     source: str
+
     event_id: int
+
+    record_id: int
+
     computer: str
+
+    provider: str
+
     timestamp: datetime
-    payload: dict[str, Any]
+
+    xml: str
+
+    payload: dict

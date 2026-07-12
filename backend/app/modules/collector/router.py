@@ -19,7 +19,7 @@ router = APIRouter(
     "/events",
     response_model=CollectorEventResponse
 )
-def ingest_collector_event(
+def ingest_event(
     event: CollectorEvent,
     db: Session = Depends(get_db)
 ):

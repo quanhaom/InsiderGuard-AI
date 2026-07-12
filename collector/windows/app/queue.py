@@ -73,14 +73,21 @@ class OfflineQueue:
         data = json.loads(row[1])
 
         raw_event = RawWindowsEvent(
-            record_id=int(data["record_id"]),
-            event_id=int(data["event_id"]),
-            computer=data["computer"],
-            timestamp=datetime.fromisoformat(
-                data["timestamp"]
-            ),
-            xml=data["xml"]
-        )
+    		record_id=int(data["record_id"]),
+
+    		event_id=int(data["event_id"]),
+
+    		computer=data["computer"],
+
+    		provider=data.get(
+        		"provider",
+        		"Microsoft-Windows-Security-Auditing"
+    ),
+
+    timestamp=data["timestamp"],
+
+    xml=data["xml"]
+)
 
         return queue_id, raw_event
 

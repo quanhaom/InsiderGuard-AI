@@ -41,18 +41,22 @@ class Parser4624(BaseParser):
         }
 
         return CollectorEvent(
-
             source="windows-security",
 
-            event_id=4624,
+            event_id=event.event_id,
+
+            record_id=event.record_id,
 
             computer=event.computer,
 
+            provider=event.provider,
+
             timestamp=event.timestamp,
 
-            payload=payload
+            xml=event.xml,
 
-        )
+            payload=payload
+)
 
 
 ParserRegistry.register(
