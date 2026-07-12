@@ -63524,3 +63524,1195 @@ requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=8
 2026-07-13 02:00:53,220 | INFO | Cycle completed: collected=0 sent=0 queued=1943
 2026-07-13 02:00:54,505 | INFO | Collector stopped by user
 2026-07-13 02:00:54,506 | INFO | InsiderGuard Windows Collector stopped
+2026-07-13 03:30:34,872 | INFO | InsiderGuard Windows Collector started
+2026-07-13 03:30:36,991 | ERROR | Failed to send event
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connectionpool.py", line 788, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connectionpool.py", line 493, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connection.py", line 500, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1362, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1122, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1066, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connection.py", line 331, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connection.py", line 219, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\adapters.py", line 696, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connectionpool.py", line 842, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\util\retry.py", line 543, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/collector/events (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\collector\windows\app\sender.py", line 46, in send
+    response = requests.post(
+        API_URL,
+        json=body,
+        timeout=5
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\api.py", line 134, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\api.py", line 71, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\adapters.py", line 729, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/collector/events (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+2026-07-13 03:30:37,007 | WARNING | Backend unavailable. Event RecordID=3698 remains queued
+2026-07-13 03:30:37,044 | INFO | Cycle completed: collected=0 sent=0 queued=1943
+2026-07-13 03:30:41,142 | ERROR | Failed to send event
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connectionpool.py", line 788, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connectionpool.py", line 493, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connection.py", line 500, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1362, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1122, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python314\Lib\http\client.py", line 1066, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connection.py", line 331, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connection.py", line 219, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\adapters.py", line 696, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\connectionpool.py", line 842, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\urllib3\util\retry.py", line 543, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/collector/events (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\collector\windows\app\sender.py", line 46, in send
+    response = requests.post(
+        API_URL,
+        json=body,
+        timeout=5
+    )
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\api.py", line 134, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\api.py", line 71, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Administrator\Downloads\InsiderGuard-AI\backend\.venv\Lib\site-packages\requests\adapters.py", line 729, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/collector/events (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+2026-07-13 03:30:41,145 | WARNING | Backend unavailable. Event RecordID=3698 remains queued
+2026-07-13 03:30:41,147 | INFO | Cycle completed: collected=0 sent=0 queued=1943
+2026-07-13 03:30:45,260 | INFO | Event ID=4624 RecordID=3698 sent successfully
+2026-07-13 03:30:45,265 | INFO | Processed EventID=4624 RecordID=3698
+2026-07-13 03:30:45,274 | INFO | Event ID=4624 RecordID=3696 sent successfully
+2026-07-13 03:30:45,276 | INFO | Processed EventID=4624 RecordID=3696
+2026-07-13 03:30:45,283 | INFO | Event ID=4624 RecordID=7532 sent successfully
+2026-07-13 03:30:45,285 | INFO | Processed EventID=4624 RecordID=7532
+2026-07-13 03:30:45,293 | INFO | Event ID=4624 RecordID=7530 sent successfully
+2026-07-13 03:30:45,295 | INFO | Processed EventID=4624 RecordID=7530
+2026-07-13 03:30:45,303 | INFO | Event ID=4624 RecordID=7528 sent successfully
+2026-07-13 03:30:45,306 | INFO | Processed EventID=4624 RecordID=7528
+2026-07-13 03:30:45,315 | INFO | Event ID=4624 RecordID=7526 sent successfully
+2026-07-13 03:30:45,321 | INFO | Processed EventID=4624 RecordID=7526
+2026-07-13 03:30:45,329 | INFO | Collector stopped by user
+2026-07-13 03:30:45,330 | INFO | InsiderGuard Windows Collector stopped
+2026-07-13 03:30:48,399 | INFO | InsiderGuard Windows Collector started
+2026-07-13 03:30:48,482 | INFO | Event ID=4624 RecordID=7524 sent successfully
+2026-07-13 03:30:48,484 | INFO | Processed EventID=4624 RecordID=7524
+2026-07-13 03:30:48,503 | INFO | Event ID=4624 RecordID=7522 sent successfully
+2026-07-13 03:30:48,505 | INFO | Processed EventID=4624 RecordID=7522
+2026-07-13 03:30:48,511 | INFO | Event ID=4624 RecordID=7516 sent successfully
+2026-07-13 03:30:48,513 | INFO | Processed EventID=4624 RecordID=7516
+2026-07-13 03:30:48,519 | INFO | Event ID=4624 RecordID=7504 sent successfully
+2026-07-13 03:30:48,521 | INFO | Processed EventID=4624 RecordID=7504
+2026-07-13 03:30:48,528 | INFO | Event ID=4624 RecordID=7502 sent successfully
+2026-07-13 03:30:48,530 | INFO | Processed EventID=4624 RecordID=7502
+2026-07-13 03:30:48,537 | INFO | Event ID=4624 RecordID=7500 sent successfully
+2026-07-13 03:30:48,539 | INFO | Processed EventID=4624 RecordID=7500
+2026-07-13 03:30:48,546 | INFO | Event ID=4624 RecordID=7498 sent successfully
+2026-07-13 03:30:48,548 | INFO | Processed EventID=4624 RecordID=7498
+2026-07-13 03:30:48,554 | INFO | Event ID=4624 RecordID=7494 sent successfully
+2026-07-13 03:30:48,556 | INFO | Processed EventID=4624 RecordID=7494
+2026-07-13 03:30:48,564 | INFO | Event ID=4624 RecordID=7488 sent successfully
+2026-07-13 03:30:48,566 | INFO | Processed EventID=4624 RecordID=7488
+2026-07-13 03:30:48,573 | INFO | Event ID=4624 RecordID=7485 sent successfully
+2026-07-13 03:30:48,574 | INFO | Processed EventID=4624 RecordID=7485
+2026-07-13 03:30:48,580 | INFO | Event ID=4624 RecordID=7476 sent successfully
+2026-07-13 03:30:48,582 | INFO | Processed EventID=4624 RecordID=7476
+2026-07-13 03:30:48,589 | INFO | Event ID=4624 RecordID=7464 sent successfully
+2026-07-13 03:30:48,591 | INFO | Processed EventID=4624 RecordID=7464
+2026-07-13 03:30:48,598 | INFO | Event ID=4624 RecordID=7462 sent successfully
+2026-07-13 03:30:48,599 | INFO | Processed EventID=4624 RecordID=7462
+2026-07-13 03:30:48,606 | INFO | Event ID=4624 RecordID=7447 sent successfully
+2026-07-13 03:30:48,608 | INFO | Processed EventID=4624 RecordID=7447
+2026-07-13 03:30:48,614 | INFO | Event ID=4624 RecordID=7445 sent successfully
+2026-07-13 03:30:48,616 | INFO | Processed EventID=4624 RecordID=7445
+2026-07-13 03:30:48,622 | INFO | Event ID=4624 RecordID=7436 sent successfully
+2026-07-13 03:30:48,624 | INFO | Processed EventID=4624 RecordID=7436
+2026-07-13 03:30:48,630 | INFO | Event ID=4624 RecordID=7433 sent successfully
+2026-07-13 03:30:48,632 | INFO | Processed EventID=4624 RecordID=7433
+2026-07-13 03:30:48,639 | INFO | Event ID=4624 RecordID=7431 sent successfully
+2026-07-13 03:30:48,641 | INFO | Processed EventID=4624 RecordID=7431
+2026-07-13 03:30:48,648 | INFO | Event ID=4624 RecordID=7420 sent successfully
+2026-07-13 03:30:48,649 | INFO | Processed EventID=4624 RecordID=7420
+2026-07-13 03:30:48,656 | INFO | Event ID=4624 RecordID=7418 sent successfully
+2026-07-13 03:30:48,658 | INFO | Processed EventID=4624 RecordID=7418
+2026-07-13 03:30:48,664 | INFO | Event ID=4624 RecordID=7398 sent successfully
+2026-07-13 03:30:48,667 | INFO | Processed EventID=4624 RecordID=7398
+2026-07-13 03:30:48,686 | INFO | Event ID=4624 RecordID=7396 sent successfully
+2026-07-13 03:30:48,688 | INFO | Processed EventID=4624 RecordID=7396
+2026-07-13 03:30:48,694 | INFO | Event ID=4624 RecordID=7394 sent successfully
+2026-07-13 03:30:48,696 | INFO | Processed EventID=4624 RecordID=7394
+2026-07-13 03:30:48,704 | INFO | Event ID=4624 RecordID=7386 sent successfully
+2026-07-13 03:30:48,705 | INFO | Processed EventID=4624 RecordID=7386
+2026-07-13 03:30:48,712 | INFO | Event ID=4624 RecordID=7382 sent successfully
+2026-07-13 03:30:48,713 | INFO | Processed EventID=4624 RecordID=7382
+2026-07-13 03:30:48,721 | INFO | Event ID=4624 RecordID=7370 sent successfully
+2026-07-13 03:30:48,723 | INFO | Processed EventID=4624 RecordID=7370
+2026-07-13 03:30:48,729 | INFO | Event ID=4624 RecordID=7368 sent successfully
+2026-07-13 03:30:48,731 | INFO | Processed EventID=4624 RecordID=7368
+2026-07-13 03:30:48,738 | INFO | Event ID=4624 RecordID=7352 sent successfully
+2026-07-13 03:30:48,739 | INFO | Processed EventID=4624 RecordID=7352
+2026-07-13 03:30:48,746 | INFO | Event ID=4624 RecordID=7347 sent successfully
+2026-07-13 03:30:48,749 | INFO | Processed EventID=4624 RecordID=7347
+2026-07-13 03:30:48,755 | INFO | Event ID=4624 RecordID=7345 sent successfully
+2026-07-13 03:30:48,757 | INFO | Processed EventID=4624 RecordID=7345
+2026-07-13 03:30:48,764 | INFO | Event ID=4624 RecordID=7343 sent successfully
+2026-07-13 03:30:48,766 | INFO | Processed EventID=4624 RecordID=7343
+2026-07-13 03:30:48,773 | INFO | Event ID=4624 RecordID=7337 sent successfully
+2026-07-13 03:30:48,774 | INFO | Processed EventID=4624 RecordID=7337
+2026-07-13 03:30:48,782 | INFO | Event ID=4624 RecordID=7325 sent successfully
+2026-07-13 03:30:48,784 | INFO | Processed EventID=4624 RecordID=7325
+2026-07-13 03:30:48,791 | INFO | Event ID=4624 RecordID=7313 sent successfully
+2026-07-13 03:30:48,793 | INFO | Processed EventID=4624 RecordID=7313
+2026-07-13 03:30:48,799 | INFO | Event ID=4624 RecordID=7311 sent successfully
+2026-07-13 03:30:48,802 | INFO | Processed EventID=4624 RecordID=7311
+2026-07-13 03:30:48,810 | INFO | Event ID=4624 RecordID=7309 sent successfully
+2026-07-13 03:30:48,811 | INFO | Processed EventID=4624 RecordID=7309
+2026-07-13 03:30:48,818 | INFO | Event ID=4624 RecordID=7265 sent successfully
+2026-07-13 03:30:48,820 | INFO | Processed EventID=4624 RecordID=7265
+2026-07-13 03:30:48,826 | INFO | Event ID=4624 RecordID=7137 sent successfully
+2026-07-13 03:30:48,828 | INFO | Processed EventID=4624 RecordID=7137
+2026-07-13 03:30:48,835 | INFO | Event ID=4624 RecordID=7059 sent successfully
+2026-07-13 03:30:48,837 | INFO | Processed EventID=4624 RecordID=7059
+2026-07-13 03:30:48,844 | INFO | Event ID=4624 RecordID=7049 sent successfully
+2026-07-13 03:30:48,845 | INFO | Processed EventID=4624 RecordID=7049
+2026-07-13 03:30:48,866 | INFO | Event ID=4624 RecordID=7043 sent successfully
+2026-07-13 03:30:48,868 | INFO | Processed EventID=4624 RecordID=7043
+2026-07-13 03:30:48,874 | INFO | Event ID=4624 RecordID=7034 sent successfully
+2026-07-13 03:30:48,876 | INFO | Processed EventID=4624 RecordID=7034
+2026-07-13 03:30:48,882 | INFO | Event ID=4624 RecordID=7032 sent successfully
+2026-07-13 03:30:48,884 | INFO | Processed EventID=4624 RecordID=7032
+2026-07-13 03:30:48,891 | INFO | Event ID=4624 RecordID=7030 sent successfully
+2026-07-13 03:30:48,892 | INFO | Processed EventID=4624 RecordID=7030
+2026-07-13 03:30:48,900 | INFO | Event ID=4624 RecordID=7020 sent successfully
+2026-07-13 03:30:48,902 | INFO | Processed EventID=4624 RecordID=7020
+2026-07-13 03:30:48,909 | INFO | Event ID=4624 RecordID=7016 sent successfully
+2026-07-13 03:30:48,911 | INFO | Processed EventID=4624 RecordID=7016
+2026-07-13 03:30:48,919 | INFO | Event ID=4624 RecordID=7014 sent successfully
+2026-07-13 03:30:48,920 | INFO | Processed EventID=4624 RecordID=7014
+2026-07-13 03:30:48,927 | INFO | Event ID=4624 RecordID=7012 sent successfully
+2026-07-13 03:30:48,929 | INFO | Processed EventID=4624 RecordID=7012
+2026-07-13 03:30:48,935 | INFO | Event ID=4624 RecordID=7010 sent successfully
+2026-07-13 03:30:48,937 | INFO | Processed EventID=4624 RecordID=7010
+2026-07-13 03:30:48,944 | INFO | Event ID=4624 RecordID=6990 sent successfully
+2026-07-13 03:30:48,945 | INFO | Processed EventID=4624 RecordID=6990
+2026-07-13 03:30:48,952 | INFO | Event ID=4624 RecordID=6988 sent successfully
+2026-07-13 03:30:48,954 | INFO | Processed EventID=4624 RecordID=6988
+2026-07-13 03:30:48,961 | INFO | Event ID=4624 RecordID=6972 sent successfully
+2026-07-13 03:30:48,962 | INFO | Processed EventID=4624 RecordID=6972
+2026-07-13 03:30:48,970 | INFO | Event ID=4624 RecordID=6970 sent successfully
+2026-07-13 03:30:48,972 | INFO | Processed EventID=4624 RecordID=6970
+2026-07-13 03:30:48,978 | INFO | Event ID=4624 RecordID=6964 sent successfully
+2026-07-13 03:30:48,980 | INFO | Processed EventID=4624 RecordID=6964
+2026-07-13 03:30:48,987 | INFO | Event ID=4624 RecordID=6962 sent successfully
+2026-07-13 03:30:48,989 | INFO | Processed EventID=4624 RecordID=6962
+2026-07-13 03:30:48,996 | INFO | Event ID=4624 RecordID=6960 sent successfully
+2026-07-13 03:30:48,997 | INFO | Processed EventID=4624 RecordID=6960
+2026-07-13 03:30:49,004 | INFO | Event ID=4624 RecordID=6958 sent successfully
+2026-07-13 03:30:49,006 | INFO | Processed EventID=4624 RecordID=6958
+2026-07-13 03:30:49,013 | INFO | Event ID=4624 RecordID=6956 sent successfully
+2026-07-13 03:30:49,014 | INFO | Processed EventID=4624 RecordID=6956
+2026-07-13 03:30:49,021 | INFO | Event ID=4624 RecordID=6950 sent successfully
+2026-07-13 03:30:49,023 | INFO | Processed EventID=4624 RecordID=6950
+2026-07-13 03:30:49,030 | INFO | Event ID=4624 RecordID=6938 sent successfully
+2026-07-13 03:30:49,031 | INFO | Processed EventID=4624 RecordID=6938
+2026-07-13 03:30:49,039 | INFO | Event ID=4624 RecordID=6936 sent successfully
+2026-07-13 03:30:49,041 | INFO | Processed EventID=4624 RecordID=6936
+2026-07-13 03:30:49,047 | INFO | Event ID=4624 RecordID=6934 sent successfully
+2026-07-13 03:30:49,048 | INFO | Processed EventID=4624 RecordID=6934
+2026-07-13 03:30:49,055 | INFO | Event ID=4624 RecordID=6930 sent successfully
+2026-07-13 03:30:49,057 | INFO | Processed EventID=4624 RecordID=6930
+2026-07-13 03:30:49,065 | INFO | Event ID=4624 RecordID=6928 sent successfully
+2026-07-13 03:30:49,067 | INFO | Processed EventID=4624 RecordID=6928
+2026-07-13 03:30:49,074 | INFO | Event ID=4624 RecordID=6926 sent successfully
+2026-07-13 03:30:49,075 | INFO | Processed EventID=4624 RecordID=6926
+2026-07-13 03:30:49,082 | INFO | Event ID=4624 RecordID=6920 sent successfully
+2026-07-13 03:30:49,083 | INFO | Processed EventID=4624 RecordID=6920
+2026-07-13 03:30:49,090 | INFO | Event ID=4624 RecordID=6918 sent successfully
+2026-07-13 03:30:49,092 | INFO | Processed EventID=4624 RecordID=6918
+2026-07-13 03:30:49,122 | INFO | Event ID=4624 RecordID=6916 sent successfully
+2026-07-13 03:30:49,125 | INFO | Processed EventID=4624 RecordID=6916
+2026-07-13 03:30:49,130 | INFO | Event ID=4624 RecordID=6914 sent successfully
+2026-07-13 03:30:49,132 | INFO | Processed EventID=4624 RecordID=6914
+2026-07-13 03:30:49,139 | INFO | Event ID=4624 RecordID=6912 sent successfully
+2026-07-13 03:30:49,140 | INFO | Processed EventID=4624 RecordID=6912
+2026-07-13 03:30:49,147 | INFO | Event ID=4624 RecordID=6910 sent successfully
+2026-07-13 03:30:49,148 | INFO | Processed EventID=4624 RecordID=6910
+2026-07-13 03:30:49,155 | INFO | Event ID=4624 RecordID=6908 sent successfully
+2026-07-13 03:30:49,157 | INFO | Processed EventID=4624 RecordID=6908
+2026-07-13 03:30:49,164 | INFO | Event ID=4624 RecordID=6906 sent successfully
+2026-07-13 03:30:49,166 | INFO | Processed EventID=4624 RecordID=6906
+2026-07-13 03:30:49,173 | INFO | Event ID=4624 RecordID=6904 sent successfully
+2026-07-13 03:30:49,175 | INFO | Processed EventID=4624 RecordID=6904
+2026-07-13 03:30:49,182 | INFO | Event ID=4624 RecordID=6902 sent successfully
+2026-07-13 03:30:49,183 | INFO | Processed EventID=4624 RecordID=6902
+2026-07-13 03:30:49,190 | INFO | Event ID=4624 RecordID=6900 sent successfully
+2026-07-13 03:30:49,192 | INFO | Processed EventID=4624 RecordID=6900
+2026-07-13 03:30:49,198 | INFO | Event ID=4624 RecordID=6894 sent successfully
+2026-07-13 03:30:49,200 | INFO | Processed EventID=4624 RecordID=6894
+2026-07-13 03:30:49,207 | INFO | Event ID=4624 RecordID=6892 sent successfully
+2026-07-13 03:30:49,209 | INFO | Processed EventID=4624 RecordID=6892
+2026-07-13 03:30:49,215 | INFO | Event ID=4624 RecordID=6890 sent successfully
+2026-07-13 03:30:49,217 | INFO | Processed EventID=4624 RecordID=6890
+2026-07-13 03:30:49,224 | INFO | Event ID=4624 RecordID=6856 sent successfully
+2026-07-13 03:30:49,229 | INFO | Processed EventID=4624 RecordID=6856
+2026-07-13 03:30:49,237 | INFO | Event ID=4624 RecordID=6808 sent successfully
+2026-07-13 03:30:49,239 | INFO | Processed EventID=4624 RecordID=6808
+2026-07-13 03:30:49,246 | INFO | Event ID=4624 RecordID=6806 sent successfully
+2026-07-13 03:30:49,247 | INFO | Processed EventID=4624 RecordID=6806
+2026-07-13 03:30:49,256 | INFO | Event ID=4624 RecordID=6804 sent successfully
+2026-07-13 03:30:49,258 | INFO | Processed EventID=4624 RecordID=6804
+2026-07-13 03:30:49,289 | INFO | Event ID=4624 RecordID=6798 sent successfully
+2026-07-13 03:30:49,290 | INFO | Processed EventID=4624 RecordID=6798
+2026-07-13 03:30:49,296 | INFO | Event ID=4624 RecordID=6796 sent successfully
+2026-07-13 03:30:49,298 | INFO | Processed EventID=4624 RecordID=6796
+2026-07-13 03:30:49,307 | INFO | Event ID=4624 RecordID=6792 sent successfully
+2026-07-13 03:30:49,308 | INFO | Processed EventID=4624 RecordID=6792
+2026-07-13 03:30:49,316 | INFO | Event ID=4624 RecordID=6790 sent successfully
+2026-07-13 03:30:49,318 | INFO | Processed EventID=4624 RecordID=6790
+2026-07-13 03:30:49,325 | INFO | Event ID=4624 RecordID=6788 sent successfully
+2026-07-13 03:30:49,328 | INFO | Processed EventID=4624 RecordID=6788
+2026-07-13 03:30:49,337 | INFO | Event ID=4624 RecordID=6780 sent successfully
+2026-07-13 03:30:49,339 | INFO | Processed EventID=4624 RecordID=6780
+2026-07-13 03:30:49,348 | INFO | Event ID=4624 RecordID=6772 sent successfully
+2026-07-13 03:30:49,350 | INFO | Processed EventID=4624 RecordID=6772
+2026-07-13 03:30:49,358 | INFO | Event ID=4624 RecordID=6768 sent successfully
+2026-07-13 03:30:49,359 | INFO | Processed EventID=4624 RecordID=6768
+2026-07-13 03:30:49,367 | INFO | Event ID=4624 RecordID=6759 sent successfully
+2026-07-13 03:30:49,369 | INFO | Processed EventID=4624 RecordID=6759
+2026-07-13 03:30:49,376 | INFO | Event ID=4624 RecordID=6750 sent successfully
+2026-07-13 03:30:49,378 | INFO | Processed EventID=4624 RecordID=6750
+2026-07-13 03:30:49,386 | INFO | Event ID=4624 RecordID=6748 sent successfully
+2026-07-13 03:30:49,388 | INFO | Processed EventID=4624 RecordID=6748
+2026-07-13 03:30:49,397 | INFO | Event ID=4624 RecordID=6746 sent successfully
+2026-07-13 03:30:49,399 | INFO | Processed EventID=4624 RecordID=6746
+2026-07-13 03:30:49,407 | INFO | Event ID=4624 RecordID=6743 sent successfully
+2026-07-13 03:30:49,408 | INFO | Processed EventID=4624 RecordID=6743
+2026-07-13 03:30:49,416 | INFO | Event ID=4624 RecordID=6741 sent successfully
+2026-07-13 03:30:49,418 | INFO | Processed EventID=4624 RecordID=6741
+2026-07-13 03:30:49,427 | INFO | Event ID=4624 RecordID=6711 sent successfully
+2026-07-13 03:30:49,429 | INFO | Processed EventID=4624 RecordID=6711
+2026-07-13 03:30:49,437 | INFO | Event ID=4624 RecordID=6709 sent successfully
+2026-07-13 03:30:49,439 | INFO | Processed EventID=4624 RecordID=6709
+2026-07-13 03:30:49,447 | INFO | Event ID=4624 RecordID=6703 sent successfully
+2026-07-13 03:30:49,449 | INFO | Processed EventID=4624 RecordID=6703
+2026-07-13 03:30:49,457 | INFO | Event ID=4624 RecordID=6701 sent successfully
+2026-07-13 03:30:49,459 | INFO | Processed EventID=4624 RecordID=6701
+2026-07-13 03:30:49,466 | INFO | Event ID=4624 RecordID=6669 sent successfully
+2026-07-13 03:30:49,468 | INFO | Processed EventID=4624 RecordID=6669
+2026-07-13 03:30:49,476 | INFO | Event ID=4624 RecordID=6667 sent successfully
+2026-07-13 03:30:49,478 | INFO | Processed EventID=4624 RecordID=6667
+2026-07-13 03:30:49,485 | INFO | Event ID=4624 RecordID=6665 sent successfully
+2026-07-13 03:30:49,487 | INFO | Processed EventID=4624 RecordID=6665
+2026-07-13 03:30:49,495 | INFO | Event ID=4624 RecordID=6577 sent successfully
+2026-07-13 03:30:49,497 | INFO | Processed EventID=4624 RecordID=6577
+2026-07-13 03:30:49,505 | INFO | Event ID=4624 RecordID=6575 sent successfully
+2026-07-13 03:30:49,507 | INFO | Processed EventID=4624 RecordID=6575
+2026-07-13 03:30:49,514 | INFO | Event ID=4624 RecordID=6571 sent successfully
+2026-07-13 03:30:49,516 | INFO | Processed EventID=4624 RecordID=6571
+2026-07-13 03:30:49,523 | INFO | Event ID=4624 RecordID=6569 sent successfully
+2026-07-13 03:30:49,525 | INFO | Processed EventID=4624 RecordID=6569
+2026-07-13 03:30:49,532 | INFO | Event ID=4624 RecordID=6550 sent successfully
+2026-07-13 03:30:49,534 | INFO | Processed EventID=4624 RecordID=6550
+2026-07-13 03:30:49,541 | INFO | Event ID=4624 RecordID=6548 sent successfully
+2026-07-13 03:30:49,543 | INFO | Processed EventID=4624 RecordID=6548
+2026-07-13 03:30:49,551 | INFO | Event ID=4624 RecordID=6546 sent successfully
+2026-07-13 03:30:49,552 | INFO | Processed EventID=4624 RecordID=6546
+2026-07-13 03:30:49,559 | INFO | Event ID=4624 RecordID=6541 sent successfully
+2026-07-13 03:30:49,561 | INFO | Processed EventID=4624 RecordID=6541
+2026-07-13 03:30:49,570 | INFO | Event ID=4624 RecordID=6536 sent successfully
+2026-07-13 03:30:49,571 | INFO | Processed EventID=4624 RecordID=6536
+2026-07-13 03:30:49,578 | INFO | Event ID=4624 RecordID=6533 sent successfully
+2026-07-13 03:30:49,580 | INFO | Processed EventID=4624 RecordID=6533
+2026-07-13 03:30:49,587 | INFO | Event ID=4624 RecordID=6527 sent successfully
+2026-07-13 03:30:49,589 | INFO | Processed EventID=4624 RecordID=6527
+2026-07-13 03:30:49,597 | INFO | Event ID=4624 RecordID=6525 sent successfully
+2026-07-13 03:30:49,598 | INFO | Processed EventID=4624 RecordID=6525
+2026-07-13 03:30:49,606 | INFO | Event ID=4624 RecordID=6522 sent successfully
+2026-07-13 03:30:49,607 | INFO | Processed EventID=4624 RecordID=6522
+2026-07-13 03:30:49,614 | INFO | Event ID=4624 RecordID=6520 sent successfully
+2026-07-13 03:30:49,616 | INFO | Processed EventID=4624 RecordID=6520
+2026-07-13 03:30:49,623 | INFO | Event ID=4624 RecordID=6518 sent successfully
+2026-07-13 03:30:49,625 | INFO | Processed EventID=4624 RecordID=6518
+2026-07-13 03:30:49,632 | INFO | Event ID=4624 RecordID=6516 sent successfully
+2026-07-13 03:30:49,634 | INFO | Processed EventID=4624 RecordID=6516
+2026-07-13 03:30:49,641 | INFO | Event ID=4624 RecordID=6514 sent successfully
+2026-07-13 03:30:49,642 | INFO | Processed EventID=4624 RecordID=6514
+2026-07-13 03:30:49,649 | INFO | Event ID=4624 RecordID=6512 sent successfully
+2026-07-13 03:30:49,650 | INFO | Processed EventID=4624 RecordID=6512
+2026-07-13 03:30:49,657 | INFO | Event ID=4624 RecordID=6509 sent successfully
+2026-07-13 03:30:49,658 | INFO | Processed EventID=4624 RecordID=6509
+2026-07-13 03:30:49,665 | INFO | Event ID=4624 RecordID=6507 sent successfully
+2026-07-13 03:30:49,667 | INFO | Processed EventID=4624 RecordID=6507
+2026-07-13 03:30:49,673 | INFO | Event ID=4624 RecordID=6505 sent successfully
+2026-07-13 03:30:49,675 | INFO | Processed EventID=4624 RecordID=6505
+2026-07-13 03:30:49,681 | INFO | Event ID=4624 RecordID=6503 sent successfully
+2026-07-13 03:30:49,683 | INFO | Processed EventID=4624 RecordID=6503
+2026-07-13 03:30:49,691 | INFO | Event ID=4624 RecordID=6501 sent successfully
+2026-07-13 03:30:49,692 | INFO | Processed EventID=4624 RecordID=6501
+2026-07-13 03:30:49,700 | INFO | Event ID=4624 RecordID=6499 sent successfully
+2026-07-13 03:30:49,702 | INFO | Processed EventID=4624 RecordID=6499
+2026-07-13 03:30:49,710 | INFO | Event ID=4624 RecordID=6493 sent successfully
+2026-07-13 03:30:49,712 | INFO | Processed EventID=4624 RecordID=6493
+2026-07-13 03:30:49,727 | INFO | Event ID=4624 RecordID=6491 sent successfully
+2026-07-13 03:30:49,730 | INFO | Processed EventID=4624 RecordID=6491
+2026-07-13 03:30:49,741 | INFO | Event ID=4624 RecordID=6489 sent successfully
+2026-07-13 03:30:49,744 | INFO | Processed EventID=4624 RecordID=6489
+2026-07-13 03:30:49,755 | INFO | Event ID=4624 RecordID=6487 sent successfully
+2026-07-13 03:30:49,758 | INFO | Processed EventID=4624 RecordID=6487
+2026-07-13 03:30:49,768 | INFO | Event ID=4624 RecordID=6485 sent successfully
+2026-07-13 03:30:49,770 | INFO | Processed EventID=4624 RecordID=6485
+2026-07-13 03:30:49,783 | INFO | Event ID=4624 RecordID=6483 sent successfully
+2026-07-13 03:30:49,785 | INFO | Processed EventID=4624 RecordID=6483
+2026-07-13 03:30:49,793 | INFO | Event ID=4624 RecordID=6481 sent successfully
+2026-07-13 03:30:49,795 | INFO | Processed EventID=4624 RecordID=6481
+2026-07-13 03:30:49,802 | INFO | Event ID=4624 RecordID=6479 sent successfully
+2026-07-13 03:30:49,804 | INFO | Processed EventID=4624 RecordID=6479
+2026-07-13 03:30:49,810 | INFO | Event ID=4624 RecordID=6477 sent successfully
+2026-07-13 03:30:49,812 | INFO | Processed EventID=4624 RecordID=6477
+2026-07-13 03:30:49,820 | INFO | Event ID=4624 RecordID=6475 sent successfully
+2026-07-13 03:30:49,821 | INFO | Processed EventID=4624 RecordID=6475
+2026-07-13 03:30:49,828 | INFO | Event ID=4624 RecordID=6472 sent successfully
+2026-07-13 03:30:49,830 | INFO | Processed EventID=4624 RecordID=6472
+2026-07-13 03:30:49,838 | INFO | Event ID=4624 RecordID=6471 sent successfully
+2026-07-13 03:30:49,840 | INFO | Processed EventID=4624 RecordID=6471
+2026-07-13 03:30:49,847 | INFO | Event ID=4624 RecordID=6468 sent successfully
+2026-07-13 03:30:49,849 | INFO | Processed EventID=4624 RecordID=6468
+2026-07-13 03:30:49,874 | INFO | Event ID=4624 RecordID=6466 sent successfully
+2026-07-13 03:30:49,875 | INFO | Processed EventID=4624 RecordID=6466
+2026-07-13 03:30:49,883 | INFO | Event ID=4624 RecordID=6464 sent successfully
+2026-07-13 03:30:49,884 | INFO | Processed EventID=4624 RecordID=6464
+2026-07-13 03:30:49,892 | INFO | Event ID=4624 RecordID=6463 sent successfully
+2026-07-13 03:30:49,893 | INFO | Processed EventID=4624 RecordID=6463
+2026-07-13 03:30:49,900 | INFO | Event ID=4624 RecordID=6461 sent successfully
+2026-07-13 03:30:49,902 | INFO | Processed EventID=4624 RecordID=6461
+2026-07-13 03:30:49,911 | INFO | Event ID=4624 RecordID=6458 sent successfully
+2026-07-13 03:30:49,913 | INFO | Processed EventID=4624 RecordID=6458
+2026-07-13 03:30:49,920 | INFO | Event ID=4624 RecordID=6429 sent successfully
+2026-07-13 03:30:49,922 | INFO | Processed EventID=4624 RecordID=6429
+2026-07-13 03:30:49,929 | INFO | Event ID=4624 RecordID=6398 sent successfully
+2026-07-13 03:30:49,931 | INFO | Processed EventID=4624 RecordID=6398
+2026-07-13 03:30:49,938 | INFO | Event ID=4624 RecordID=6396 sent successfully
+2026-07-13 03:30:49,940 | INFO | Processed EventID=4624 RecordID=6396
+2026-07-13 03:30:49,964 | INFO | Event ID=4624 RecordID=6373 sent successfully
+2026-07-13 03:30:49,966 | INFO | Processed EventID=4624 RecordID=6373
+2026-07-13 03:30:49,974 | INFO | Event ID=4624 RecordID=6371 sent successfully
+2026-07-13 03:30:49,976 | INFO | Processed EventID=4624 RecordID=6371
+2026-07-13 03:30:49,984 | INFO | Event ID=4624 RecordID=6361 sent successfully
+2026-07-13 03:30:49,986 | INFO | Processed EventID=4624 RecordID=6361
+2026-07-13 03:30:49,994 | INFO | Event ID=4624 RecordID=6348 sent successfully
+2026-07-13 03:30:49,996 | INFO | Processed EventID=4624 RecordID=6348
+2026-07-13 03:30:50,003 | INFO | Event ID=4624 RecordID=6346 sent successfully
+2026-07-13 03:30:50,005 | INFO | Processed EventID=4624 RecordID=6346
+2026-07-13 03:30:50,012 | INFO | Event ID=4624 RecordID=6343 sent successfully
+2026-07-13 03:30:50,014 | INFO | Processed EventID=4624 RecordID=6343
+2026-07-13 03:30:50,022 | INFO | Event ID=4624 RecordID=6339 sent successfully
+2026-07-13 03:30:50,023 | INFO | Processed EventID=4624 RecordID=6339
+2026-07-13 03:30:50,031 | INFO | Event ID=4624 RecordID=6133 sent successfully
+2026-07-13 03:30:50,033 | INFO | Processed EventID=4624 RecordID=6133
+2026-07-13 03:30:50,040 | INFO | Event ID=4624 RecordID=6007 sent successfully
+2026-07-13 03:30:50,043 | INFO | Processed EventID=4624 RecordID=6007
+2026-07-13 03:30:50,053 | INFO | Event ID=4624 RecordID=5929 sent successfully
+2026-07-13 03:30:50,055 | INFO | Processed EventID=4624 RecordID=5929
+2026-07-13 03:30:50,065 | INFO | Event ID=4624 RecordID=5919 sent successfully
+2026-07-13 03:30:50,066 | INFO | Processed EventID=4624 RecordID=5919
+2026-07-13 03:30:50,079 | INFO | Event ID=4624 RecordID=5917 sent successfully
+2026-07-13 03:30:50,082 | INFO | Processed EventID=4624 RecordID=5917
+2026-07-13 03:30:50,091 | INFO | Event ID=4624 RecordID=5900 sent successfully
+2026-07-13 03:30:50,093 | INFO | Processed EventID=4624 RecordID=5900
+2026-07-13 03:30:50,102 | INFO | Event ID=4624 RecordID=5894 sent successfully
+2026-07-13 03:30:50,104 | INFO | Processed EventID=4624 RecordID=5894
+2026-07-13 03:30:50,113 | INFO | Event ID=4624 RecordID=5877 sent successfully
+2026-07-13 03:30:50,114 | INFO | Processed EventID=4624 RecordID=5877
+2026-07-13 03:30:50,122 | INFO | Event ID=4624 RecordID=5846 sent successfully
+2026-07-13 03:30:50,124 | INFO | Processed EventID=4624 RecordID=5846
+2026-07-13 03:30:50,133 | INFO | Event ID=4624 RecordID=5824 sent successfully
+2026-07-13 03:30:50,135 | INFO | Processed EventID=4624 RecordID=5824
+2026-07-13 03:30:50,142 | INFO | Event ID=4624 RecordID=5816 sent successfully
+2026-07-13 03:30:50,144 | INFO | Processed EventID=4624 RecordID=5816
+2026-07-13 03:30:50,152 | INFO | Event ID=4624 RecordID=5814 sent successfully
+2026-07-13 03:30:50,162 | INFO | Processed EventID=4624 RecordID=5814
+2026-07-13 03:30:50,171 | INFO | Event ID=4624 RecordID=5812 sent successfully
+2026-07-13 03:30:50,173 | INFO | Processed EventID=4624 RecordID=5812
+2026-07-13 03:30:50,182 | INFO | Event ID=4624 RecordID=5809 sent successfully
+2026-07-13 03:30:50,184 | INFO | Processed EventID=4624 RecordID=5809
+2026-07-13 03:30:50,193 | INFO | Event ID=4624 RecordID=5801 sent successfully
+2026-07-13 03:30:50,202 | INFO | Processed EventID=4624 RecordID=5801
+2026-07-13 03:30:50,211 | INFO | Event ID=4624 RecordID=5794 sent successfully
+2026-07-13 03:30:50,213 | INFO | Processed EventID=4624 RecordID=5794
+2026-07-13 03:30:50,220 | INFO | Event ID=4624 RecordID=5790 sent successfully
+2026-07-13 03:30:50,222 | INFO | Processed EventID=4624 RecordID=5790
+2026-07-13 03:30:50,229 | INFO | Event ID=4624 RecordID=5788 sent successfully
+2026-07-13 03:30:50,231 | INFO | Processed EventID=4624 RecordID=5788
+2026-07-13 03:30:50,239 | INFO | Event ID=4624 RecordID=5785 sent successfully
+2026-07-13 03:30:50,240 | INFO | Processed EventID=4624 RecordID=5785
+2026-07-13 03:30:50,247 | INFO | Event ID=4624 RecordID=5783 sent successfully
+2026-07-13 03:30:50,249 | INFO | Processed EventID=4624 RecordID=5783
+2026-07-13 03:30:50,259 | INFO | Event ID=4624 RecordID=5779 sent successfully
+2026-07-13 03:30:50,261 | INFO | Processed EventID=4624 RecordID=5779
+2026-07-13 03:30:50,270 | INFO | Event ID=4624 RecordID=5777 sent successfully
+2026-07-13 03:30:50,272 | INFO | Processed EventID=4624 RecordID=5777
+2026-07-13 03:30:50,280 | INFO | Event ID=4624 RecordID=5775 sent successfully
+2026-07-13 03:30:50,282 | INFO | Processed EventID=4624 RecordID=5775
+2026-07-13 03:30:50,288 | INFO | Event ID=4624 RecordID=5773 sent successfully
+2026-07-13 03:30:50,290 | INFO | Processed EventID=4624 RecordID=5773
+2026-07-13 03:30:50,316 | INFO | Event ID=4624 RecordID=5770 sent successfully
+2026-07-13 03:30:50,317 | INFO | Processed EventID=4624 RecordID=5770
+2026-07-13 03:30:50,324 | INFO | Event ID=4624 RecordID=5768 sent successfully
+2026-07-13 03:30:50,326 | INFO | Processed EventID=4624 RecordID=5768
+2026-07-13 03:30:50,332 | INFO | Event ID=4624 RecordID=5766 sent successfully
+2026-07-13 03:30:50,334 | INFO | Processed EventID=4624 RecordID=5766
+2026-07-13 03:30:50,341 | INFO | Event ID=4624 RecordID=5764 sent successfully
+2026-07-13 03:30:50,342 | INFO | Processed EventID=4624 RecordID=5764
+2026-07-13 03:30:50,351 | INFO | Event ID=4624 RecordID=5762 sent successfully
+2026-07-13 03:30:50,353 | INFO | Processed EventID=4624 RecordID=5762
+2026-07-13 03:30:50,360 | INFO | Event ID=4624 RecordID=5760 sent successfully
+2026-07-13 03:30:50,362 | INFO | Processed EventID=4624 RecordID=5760
+2026-07-13 03:30:50,370 | INFO | Event ID=4624 RecordID=5758 sent successfully
+2026-07-13 03:30:50,371 | INFO | Processed EventID=4624 RecordID=5758
+2026-07-13 03:30:50,379 | INFO | Event ID=4624 RecordID=5756 sent successfully
+2026-07-13 03:30:50,380 | INFO | Processed EventID=4624 RecordID=5756
+2026-07-13 03:30:50,386 | INFO | Event ID=4624 RecordID=5754 sent successfully
+2026-07-13 03:30:50,389 | INFO | Processed EventID=4624 RecordID=5754
+2026-07-13 03:30:50,396 | INFO | Event ID=4624 RecordID=5752 sent successfully
+2026-07-13 03:30:50,398 | INFO | Processed EventID=4624 RecordID=5752
+2026-07-13 03:30:50,405 | INFO | Event ID=4624 RecordID=5749 sent successfully
+2026-07-13 03:30:50,407 | INFO | Processed EventID=4624 RecordID=5749
+2026-07-13 03:30:50,413 | INFO | Event ID=4624 RecordID=5748 sent successfully
+2026-07-13 03:30:50,415 | INFO | Processed EventID=4624 RecordID=5748
+2026-07-13 03:30:50,423 | INFO | Event ID=4624 RecordID=5745 sent successfully
+2026-07-13 03:30:50,425 | INFO | Processed EventID=4624 RecordID=5745
+2026-07-13 03:30:50,433 | INFO | Event ID=4624 RecordID=5743 sent successfully
+2026-07-13 03:30:50,435 | INFO | Processed EventID=4624 RecordID=5743
+2026-07-13 03:30:50,442 | INFO | Event ID=4624 RecordID=5741 sent successfully
+2026-07-13 03:30:50,444 | INFO | Processed EventID=4624 RecordID=5741
+2026-07-13 03:30:50,453 | INFO | Event ID=4624 RecordID=5738 sent successfully
+2026-07-13 03:30:50,455 | INFO | Processed EventID=4624 RecordID=5738
+2026-07-13 03:30:50,462 | INFO | Event ID=4624 RecordID=5737 sent successfully
+2026-07-13 03:30:50,463 | INFO | Processed EventID=4624 RecordID=5737
+2026-07-13 03:30:50,472 | INFO | Event ID=4624 RecordID=5735 sent successfully
+2026-07-13 03:30:50,474 | INFO | Processed EventID=4624 RecordID=5735
+2026-07-13 03:30:50,482 | INFO | Event ID=4624 RecordID=5733 sent successfully
+2026-07-13 03:30:50,483 | INFO | Processed EventID=4624 RecordID=5733
+2026-07-13 03:30:50,491 | INFO | Event ID=4624 RecordID=5731 sent successfully
+2026-07-13 03:30:50,493 | INFO | Processed EventID=4624 RecordID=5731
+2026-07-13 03:30:50,502 | INFO | Event ID=4624 RecordID=5729 sent successfully
+2026-07-13 03:30:50,505 | INFO | Processed EventID=4624 RecordID=5729
+2026-07-13 03:30:50,512 | INFO | Event ID=4624 RecordID=5728 sent successfully
+2026-07-13 03:30:50,514 | INFO | Processed EventID=4624 RecordID=5728
+2026-07-13 03:30:50,522 | INFO | Event ID=4624 RecordID=5727 sent successfully
+2026-07-13 03:30:50,524 | INFO | Processed EventID=4624 RecordID=5727
+2026-07-13 03:30:50,532 | INFO | Event ID=4624 RecordID=5723 sent successfully
+2026-07-13 03:30:50,534 | INFO | Processed EventID=4624 RecordID=5723
+2026-07-13 03:30:50,543 | INFO | Event ID=4624 RecordID=5699 sent successfully
+2026-07-13 03:30:50,544 | INFO | Processed EventID=4624 RecordID=5699
+2026-07-13 03:30:50,552 | INFO | Event ID=4624 RecordID=5697 sent successfully
+2026-07-13 03:30:50,554 | INFO | Processed EventID=4624 RecordID=5697
+2026-07-13 03:30:50,563 | INFO | Event ID=4624 RecordID=5689 sent successfully
+2026-07-13 03:30:50,565 | INFO | Processed EventID=4624 RecordID=5689
+2026-07-13 03:30:50,575 | INFO | Event ID=4624 RecordID=5686 sent successfully
+2026-07-13 03:30:50,577 | INFO | Processed EventID=4624 RecordID=5686
+2026-07-13 03:30:50,586 | INFO | Event ID=4624 RecordID=5667 sent successfully
+2026-07-13 03:30:50,588 | INFO | Processed EventID=4624 RecordID=5667
+2026-07-13 03:30:50,595 | INFO | Event ID=4624 RecordID=5665 sent successfully
+2026-07-13 03:30:50,598 | INFO | Processed EventID=4624 RecordID=5665
+2026-07-13 03:30:50,606 | INFO | Event ID=4624 RecordID=5663 sent successfully
+2026-07-13 03:30:50,608 | INFO | Processed EventID=4624 RecordID=5663
+2026-07-13 03:30:50,616 | INFO | Event ID=4624 RecordID=5661 sent successfully
+2026-07-13 03:30:50,618 | INFO | Processed EventID=4624 RecordID=5661
+2026-07-13 03:30:50,626 | INFO | Event ID=4624 RecordID=5658 sent successfully
+2026-07-13 03:30:50,628 | INFO | Processed EventID=4624 RecordID=5658
+2026-07-13 03:30:50,635 | INFO | Event ID=4624 RecordID=5650 sent successfully
+2026-07-13 03:30:50,638 | INFO | Processed EventID=4624 RecordID=5650
+2026-07-13 03:30:50,645 | INFO | Event ID=4624 RecordID=5644 sent successfully
+2026-07-13 03:30:50,646 | INFO | Processed EventID=4624 RecordID=5644
+2026-07-13 03:30:50,656 | INFO | Event ID=4624 RecordID=5638 sent successfully
+2026-07-13 03:30:50,657 | INFO | Processed EventID=4624 RecordID=5638
+2026-07-13 03:30:50,664 | INFO | Event ID=4624 RecordID=5636 sent successfully
+2026-07-13 03:30:50,666 | INFO | Processed EventID=4624 RecordID=5636
+2026-07-13 03:30:50,675 | INFO | Event ID=4624 RecordID=5633 sent successfully
+2026-07-13 03:30:50,677 | INFO | Processed EventID=4624 RecordID=5633
+2026-07-13 03:30:50,684 | INFO | Event ID=4624 RecordID=5631 sent successfully
+2026-07-13 03:30:50,685 | INFO | Processed EventID=4624 RecordID=5631
+2026-07-13 03:30:50,693 | INFO | Event ID=4624 RecordID=5629 sent successfully
+2026-07-13 03:30:50,695 | INFO | Processed EventID=4624 RecordID=5629
+2026-07-13 03:30:50,702 | INFO | Event ID=4624 RecordID=5627 sent successfully
+2026-07-13 03:30:50,704 | INFO | Processed EventID=4624 RecordID=5627
+2026-07-13 03:30:50,712 | INFO | Event ID=4624 RecordID=5625 sent successfully
+2026-07-13 03:30:50,714 | INFO | Processed EventID=4624 RecordID=5625
+2026-07-13 03:30:50,721 | INFO | Event ID=4624 RecordID=5623 sent successfully
+2026-07-13 03:30:50,723 | INFO | Processed EventID=4624 RecordID=5623
+2026-07-13 03:30:50,730 | INFO | Event ID=4624 RecordID=5621 sent successfully
+2026-07-13 03:30:50,732 | INFO | Processed EventID=4624 RecordID=5621
+2026-07-13 03:30:50,740 | INFO | Event ID=4624 RecordID=5618 sent successfully
+2026-07-13 03:30:50,742 | INFO | Processed EventID=4624 RecordID=5618
+2026-07-13 03:30:50,749 | INFO | Event ID=4624 RecordID=5616 sent successfully
+2026-07-13 03:30:50,751 | INFO | Processed EventID=4624 RecordID=5616
+2026-07-13 03:30:50,759 | INFO | Event ID=4624 RecordID=5612 sent successfully
+2026-07-13 03:30:50,761 | INFO | Processed EventID=4624 RecordID=5612
+2026-07-13 03:30:50,767 | INFO | Event ID=4624 RecordID=5610 sent successfully
+2026-07-13 03:30:50,769 | INFO | Processed EventID=4624 RecordID=5610
+2026-07-13 03:30:50,776 | INFO | Event ID=4624 RecordID=5608 sent successfully
+2026-07-13 03:30:50,778 | INFO | Processed EventID=4624 RecordID=5608
+2026-07-13 03:30:50,785 | INFO | Event ID=4624 RecordID=5606 sent successfully
+2026-07-13 03:30:50,787 | INFO | Processed EventID=4624 RecordID=5606
+2026-07-13 03:30:50,794 | INFO | Event ID=4624 RecordID=5604 sent successfully
+2026-07-13 03:30:50,795 | INFO | Processed EventID=4624 RecordID=5604
+2026-07-13 03:30:50,803 | INFO | Event ID=4624 RecordID=5602 sent successfully
+2026-07-13 03:30:50,804 | INFO | Processed EventID=4624 RecordID=5602
+2026-07-13 03:30:50,811 | INFO | Event ID=4624 RecordID=5600 sent successfully
+2026-07-13 03:30:50,813 | INFO | Processed EventID=4624 RecordID=5600
+2026-07-13 03:30:50,819 | INFO | Event ID=4624 RecordID=5598 sent successfully
+2026-07-13 03:30:50,821 | INFO | Processed EventID=4624 RecordID=5598
+2026-07-13 03:30:50,828 | INFO | Event ID=4624 RecordID=5596 sent successfully
+2026-07-13 03:30:50,830 | INFO | Processed EventID=4624 RecordID=5596
+2026-07-13 03:30:50,838 | INFO | Event ID=4624 RecordID=5594 sent successfully
+2026-07-13 03:30:50,839 | INFO | Processed EventID=4624 RecordID=5594
+2026-07-13 03:30:50,846 | INFO | Event ID=4624 RecordID=5591 sent successfully
+2026-07-13 03:30:50,848 | INFO | Processed EventID=4624 RecordID=5591
+2026-07-13 03:30:50,855 | INFO | Event ID=4624 RecordID=5590 sent successfully
+2026-07-13 03:30:50,857 | INFO | Processed EventID=4624 RecordID=5590
+2026-07-13 03:30:50,878 | INFO | Event ID=4624 RecordID=5587 sent successfully
+2026-07-13 03:30:50,879 | INFO | Processed EventID=4624 RecordID=5587
+2026-07-13 03:30:50,885 | INFO | Event ID=4624 RecordID=5584 sent successfully
+2026-07-13 03:30:50,887 | INFO | Processed EventID=4624 RecordID=5584
+2026-07-13 03:30:50,893 | INFO | Event ID=4624 RecordID=5583 sent successfully
+2026-07-13 03:30:50,895 | INFO | Processed EventID=4624 RecordID=5583
+2026-07-13 03:30:50,901 | INFO | Event ID=4624 RecordID=5581 sent successfully
+2026-07-13 03:30:50,903 | INFO | Processed EventID=4624 RecordID=5581
+2026-07-13 03:30:50,910 | INFO | Event ID=4624 RecordID=5579 sent successfully
+2026-07-13 03:30:50,911 | INFO | Processed EventID=4624 RecordID=5579
+2026-07-13 03:30:50,918 | INFO | Event ID=4624 RecordID=5577 sent successfully
+2026-07-13 03:30:50,920 | INFO | Processed EventID=4624 RecordID=5577
+2026-07-13 03:30:50,927 | INFO | Event ID=4624 RecordID=5575 sent successfully
+2026-07-13 03:30:50,928 | INFO | Processed EventID=4624 RecordID=5575
+2026-07-13 03:30:50,934 | INFO | Event ID=4624 RecordID=5574 sent successfully
+2026-07-13 03:30:50,936 | INFO | Processed EventID=4624 RecordID=5574
+2026-07-13 03:30:50,942 | INFO | Event ID=4624 RecordID=5573 sent successfully
+2026-07-13 03:30:50,944 | INFO | Processed EventID=4624 RecordID=5573
+2026-07-13 03:30:50,951 | INFO | Event ID=4624 RecordID=5569 sent successfully
+2026-07-13 03:30:50,952 | INFO | Processed EventID=4624 RecordID=5569
+2026-07-13 03:30:50,959 | INFO | Event ID=4624 RecordID=5545 sent successfully
+2026-07-13 03:30:50,960 | INFO | Processed EventID=4624 RecordID=5545
+2026-07-13 03:30:50,967 | INFO | Event ID=4624 RecordID=5543 sent successfully
+2026-07-13 03:30:50,969 | INFO | Processed EventID=4624 RecordID=5543
+2026-07-13 03:30:50,975 | INFO | Event ID=4624 RecordID=5535 sent successfully
+2026-07-13 03:30:50,977 | INFO | Processed EventID=4624 RecordID=5535
+2026-07-13 03:30:50,983 | INFO | Event ID=4624 RecordID=5532 sent successfully
+2026-07-13 03:30:50,984 | INFO | Processed EventID=4624 RecordID=5532
+2026-07-13 03:30:50,990 | INFO | Event ID=4624 RecordID=5516 sent successfully
+2026-07-13 03:30:50,992 | INFO | Processed EventID=4624 RecordID=5516
+2026-07-13 03:30:50,999 | INFO | Event ID=4624 RecordID=5514 sent successfully
+2026-07-13 03:30:51,001 | INFO | Processed EventID=4624 RecordID=5514
+2026-07-13 03:30:51,008 | INFO | Event ID=4624 RecordID=5512 sent successfully
+2026-07-13 03:30:51,010 | INFO | Processed EventID=4624 RecordID=5512
+2026-07-13 03:30:51,017 | INFO | Event ID=4624 RecordID=5510 sent successfully
+2026-07-13 03:30:51,018 | INFO | Processed EventID=4624 RecordID=5510
+2026-07-13 03:30:51,024 | INFO | Event ID=4624 RecordID=5507 sent successfully
+2026-07-13 03:30:51,026 | INFO | Processed EventID=4624 RecordID=5507
+2026-07-13 03:30:51,032 | INFO | Event ID=4624 RecordID=5499 sent successfully
+2026-07-13 03:30:51,034 | INFO | Processed EventID=4624 RecordID=5499
+2026-07-13 03:30:51,041 | INFO | Event ID=4624 RecordID=5493 sent successfully
+2026-07-13 03:30:51,043 | INFO | Processed EventID=4624 RecordID=5493
+2026-07-13 03:30:51,049 | INFO | Event ID=4624 RecordID=5487 sent successfully
+2026-07-13 03:30:51,051 | INFO | Processed EventID=4624 RecordID=5487
+2026-07-13 03:30:51,058 | INFO | Event ID=4624 RecordID=5485 sent successfully
+2026-07-13 03:30:51,059 | INFO | Processed EventID=4624 RecordID=5485
+2026-07-13 03:30:51,089 | INFO | Event ID=4624 RecordID=5482 sent successfully
+2026-07-13 03:30:51,091 | INFO | Processed EventID=4624 RecordID=5482
+2026-07-13 03:30:51,096 | INFO | Event ID=4624 RecordID=5478 sent successfully
+2026-07-13 03:30:51,098 | INFO | Processed EventID=4624 RecordID=5478
+2026-07-13 03:30:51,105 | INFO | Event ID=4624 RecordID=5476 sent successfully
+2026-07-13 03:30:51,107 | INFO | Processed EventID=4624 RecordID=5476
+2026-07-13 03:30:51,113 | INFO | Event ID=4624 RecordID=5474 sent successfully
+2026-07-13 03:30:51,115 | INFO | Processed EventID=4624 RecordID=5474
+2026-07-13 03:30:51,121 | INFO | Event ID=4624 RecordID=5472 sent successfully
+2026-07-13 03:30:51,123 | INFO | Processed EventID=4624 RecordID=5472
+2026-07-13 03:30:51,129 | INFO | Event ID=4624 RecordID=5470 sent successfully
+2026-07-13 03:30:51,132 | INFO | Processed EventID=4624 RecordID=5470
+2026-07-13 03:30:51,138 | INFO | Event ID=4624 RecordID=5468 sent successfully
+2026-07-13 03:30:51,140 | INFO | Processed EventID=4624 RecordID=5468
+2026-07-13 03:30:51,146 | INFO | Event ID=4624 RecordID=5466 sent successfully
+2026-07-13 03:30:51,148 | INFO | Processed EventID=4624 RecordID=5466
+2026-07-13 03:30:51,154 | INFO | Event ID=4624 RecordID=5463 sent successfully
+2026-07-13 03:30:51,156 | INFO | Processed EventID=4624 RecordID=5463
+2026-07-13 03:30:51,163 | INFO | Event ID=4624 RecordID=5461 sent successfully
+2026-07-13 03:30:51,164 | INFO | Processed EventID=4624 RecordID=5461
+2026-07-13 03:30:51,172 | INFO | Event ID=4624 RecordID=5459 sent successfully
+2026-07-13 03:30:51,173 | INFO | Processed EventID=4624 RecordID=5459
+2026-07-13 03:30:51,180 | INFO | Event ID=4624 RecordID=5457 sent successfully
+2026-07-13 03:30:51,182 | INFO | Processed EventID=4624 RecordID=5457
+2026-07-13 03:30:51,189 | INFO | Event ID=4624 RecordID=5455 sent successfully
+2026-07-13 03:30:51,190 | INFO | Processed EventID=4624 RecordID=5455
+2026-07-13 03:30:51,197 | INFO | Event ID=4624 RecordID=5453 sent successfully
+2026-07-13 03:30:51,198 | INFO | Processed EventID=4624 RecordID=5453
+2026-07-13 03:30:51,205 | INFO | Event ID=4624 RecordID=5451 sent successfully
+2026-07-13 03:30:51,207 | INFO | Processed EventID=4624 RecordID=5451
+2026-07-13 03:30:51,213 | INFO | Event ID=4624 RecordID=5449 sent successfully
+2026-07-13 03:30:51,215 | INFO | Processed EventID=4624 RecordID=5449
+2026-07-13 03:30:51,221 | INFO | Event ID=4624 RecordID=5447 sent successfully
+2026-07-13 03:30:51,223 | INFO | Processed EventID=4624 RecordID=5447
+2026-07-13 03:30:51,229 | INFO | Event ID=4624 RecordID=5445 sent successfully
+2026-07-13 03:30:51,231 | INFO | Processed EventID=4624 RecordID=5445
+2026-07-13 03:30:51,237 | INFO | Event ID=4624 RecordID=5443 sent successfully
+2026-07-13 03:30:51,239 | INFO | Processed EventID=4624 RecordID=5443
+2026-07-13 03:30:51,246 | INFO | Event ID=4624 RecordID=5440 sent successfully
+2026-07-13 03:30:51,249 | INFO | Processed EventID=4624 RecordID=5440
+2026-07-13 03:30:51,255 | INFO | Event ID=4624 RecordID=5439 sent successfully
+2026-07-13 03:30:51,257 | INFO | Processed EventID=4624 RecordID=5439
+2026-07-13 03:30:51,264 | INFO | Event ID=4624 RecordID=5436 sent successfully
+2026-07-13 03:30:51,265 | INFO | Processed EventID=4624 RecordID=5436
+2026-07-13 03:30:51,272 | INFO | Event ID=4624 RecordID=5434 sent successfully
+2026-07-13 03:30:51,274 | INFO | Processed EventID=4624 RecordID=5434
+2026-07-13 03:30:51,280 | INFO | Event ID=4624 RecordID=5432 sent successfully
+2026-07-13 03:30:51,282 | INFO | Processed EventID=4624 RecordID=5432
+2026-07-13 03:30:51,288 | INFO | Event ID=4624 RecordID=5430 sent successfully
+2026-07-13 03:30:51,290 | INFO | Processed EventID=4624 RecordID=5430
+2026-07-13 03:30:51,296 | INFO | Event ID=4624 RecordID=5428 sent successfully
+2026-07-13 03:30:51,299 | INFO | Processed EventID=4624 RecordID=5428
+2026-07-13 03:30:51,305 | INFO | Event ID=4624 RecordID=5426 sent successfully
+2026-07-13 03:30:51,307 | INFO | Processed EventID=4624 RecordID=5426
+2026-07-13 03:30:51,333 | INFO | Event ID=4624 RecordID=5424 sent successfully
+2026-07-13 03:30:51,335 | INFO | Processed EventID=4624 RecordID=5424
+2026-07-13 03:30:51,341 | INFO | Event ID=4624 RecordID=5423 sent successfully
+2026-07-13 03:30:51,342 | INFO | Processed EventID=4624 RecordID=5423
+2026-07-13 03:30:51,350 | INFO | Event ID=4624 RecordID=5422 sent successfully
+2026-07-13 03:30:51,351 | INFO | Processed EventID=4624 RecordID=5422
+2026-07-13 03:30:51,358 | INFO | Event ID=4624 RecordID=5418 sent successfully
+2026-07-13 03:30:51,360 | INFO | Processed EventID=4624 RecordID=5418
+2026-07-13 03:30:51,367 | INFO | Event ID=4624 RecordID=5394 sent successfully
+2026-07-13 03:30:51,369 | INFO | Processed EventID=4624 RecordID=5394
+2026-07-13 03:30:51,376 | INFO | Event ID=4624 RecordID=5392 sent successfully
+2026-07-13 03:30:51,378 | INFO | Processed EventID=4624 RecordID=5392
+2026-07-13 03:30:51,384 | INFO | Event ID=4624 RecordID=5390 sent successfully
+2026-07-13 03:30:51,386 | INFO | Processed EventID=4624 RecordID=5390
+2026-07-13 03:30:51,393 | INFO | Event ID=4624 RecordID=5374 sent successfully
+2026-07-13 03:30:51,395 | INFO | Processed EventID=4624 RecordID=5374
+2026-07-13 03:30:51,402 | INFO | Event ID=4624 RecordID=5372 sent successfully
+2026-07-13 03:30:51,403 | INFO | Processed EventID=4624 RecordID=5372
+2026-07-13 03:30:51,411 | INFO | Event ID=4624 RecordID=5370 sent successfully
+2026-07-13 03:30:51,412 | INFO | Processed EventID=4624 RecordID=5370
+2026-07-13 03:30:51,419 | INFO | Event ID=4624 RecordID=5368 sent successfully
+2026-07-13 03:30:51,421 | INFO | Processed EventID=4624 RecordID=5368
+2026-07-13 03:30:51,428 | INFO | Event ID=4624 RecordID=5366 sent successfully
+2026-07-13 03:30:51,430 | INFO | Processed EventID=4624 RecordID=5366
+2026-07-13 03:30:51,436 | INFO | Event ID=4624 RecordID=5363 sent successfully
+2026-07-13 03:30:51,439 | INFO | Processed EventID=4624 RecordID=5363
+2026-07-13 03:30:51,446 | INFO | Event ID=4624 RecordID=5361 sent successfully
+2026-07-13 03:30:51,447 | INFO | Processed EventID=4624 RecordID=5361
+2026-07-13 03:30:51,455 | INFO | Event ID=4624 RecordID=5359 sent successfully
+2026-07-13 03:30:51,457 | INFO | Processed EventID=4624 RecordID=5359
+2026-07-13 03:30:51,463 | INFO | Event ID=4624 RecordID=5351 sent successfully
+2026-07-13 03:30:51,465 | INFO | Processed EventID=4624 RecordID=5351
+2026-07-13 03:30:51,471 | INFO | Event ID=4624 RecordID=5343 sent successfully
+2026-07-13 03:30:51,473 | INFO | Processed EventID=4624 RecordID=5343
+2026-07-13 03:30:51,480 | INFO | Event ID=4624 RecordID=5339 sent successfully
+2026-07-13 03:30:51,481 | INFO | Processed EventID=4624 RecordID=5339
+2026-07-13 03:30:51,488 | INFO | Event ID=4624 RecordID=5337 sent successfully
+2026-07-13 03:30:51,490 | INFO | Processed EventID=4624 RecordID=5337
+2026-07-13 03:30:51,496 | INFO | Event ID=4624 RecordID=5334 sent successfully
+2026-07-13 03:30:51,498 | INFO | Processed EventID=4624 RecordID=5334
+2026-07-13 03:30:51,505 | INFO | Event ID=4624 RecordID=5330 sent successfully
+2026-07-13 03:30:51,507 | INFO | Processed EventID=4624 RecordID=5330
+2026-07-13 03:30:51,515 | INFO | Event ID=4624 RecordID=5328 sent successfully
+2026-07-13 03:30:51,516 | INFO | Processed EventID=4624 RecordID=5328
+2026-07-13 03:30:51,523 | INFO | Event ID=4624 RecordID=5326 sent successfully
+2026-07-13 03:30:51,524 | INFO | Processed EventID=4624 RecordID=5326
+2026-07-13 03:30:51,531 | INFO | Event ID=4624 RecordID=5324 sent successfully
+2026-07-13 03:30:51,533 | INFO | Processed EventID=4624 RecordID=5324
+2026-07-13 03:30:51,541 | INFO | Event ID=4624 RecordID=5322 sent successfully
+2026-07-13 03:30:51,543 | INFO | Processed EventID=4624 RecordID=5322
+2026-07-13 03:30:51,551 | INFO | Event ID=4624 RecordID=5320 sent successfully
+2026-07-13 03:30:51,552 | INFO | Processed EventID=4624 RecordID=5320
+2026-07-13 03:30:51,559 | INFO | Event ID=4624 RecordID=5318 sent successfully
+2026-07-13 03:30:51,561 | INFO | Processed EventID=4624 RecordID=5318
+2026-07-13 03:30:51,570 | INFO | Event ID=4624 RecordID=5316 sent successfully
+2026-07-13 03:30:51,572 | INFO | Processed EventID=4624 RecordID=5316
+2026-07-13 03:30:51,579 | INFO | Event ID=4624 RecordID=5313 sent successfully
+2026-07-13 03:30:51,581 | INFO | Processed EventID=4624 RecordID=5313
+2026-07-13 03:30:51,606 | INFO | Event ID=4624 RecordID=5311 sent successfully
+2026-07-13 03:30:51,608 | INFO | Processed EventID=4624 RecordID=5311
+2026-07-13 03:30:51,614 | INFO | Event ID=4624 RecordID=5309 sent successfully
+2026-07-13 03:30:51,616 | INFO | Processed EventID=4624 RecordID=5309
+2026-07-13 03:30:51,625 | INFO | Event ID=4624 RecordID=5307 sent successfully
+2026-07-13 03:30:51,627 | INFO | Processed EventID=4624 RecordID=5307
+2026-07-13 03:30:51,634 | INFO | Event ID=4624 RecordID=5305 sent successfully
+2026-07-13 03:30:51,635 | INFO | Processed EventID=4624 RecordID=5305
+2026-07-13 03:30:51,644 | INFO | Event ID=4624 RecordID=5303 sent successfully
+2026-07-13 03:30:51,646 | INFO | Processed EventID=4624 RecordID=5303
+2026-07-13 03:30:51,654 | INFO | Event ID=4624 RecordID=5301 sent successfully
+2026-07-13 03:30:51,656 | INFO | Processed EventID=4624 RecordID=5301
+2026-07-13 03:30:51,663 | INFO | Event ID=4624 RecordID=5299 sent successfully
+2026-07-13 03:30:51,665 | INFO | Processed EventID=4624 RecordID=5299
+2026-07-13 03:30:51,672 | INFO | Event ID=4624 RecordID=5297 sent successfully
+2026-07-13 03:30:51,674 | INFO | Processed EventID=4624 RecordID=5297
+2026-07-13 03:30:51,683 | INFO | Event ID=4624 RecordID=5295 sent successfully
+2026-07-13 03:30:51,684 | INFO | Processed EventID=4624 RecordID=5295
+2026-07-13 03:30:51,692 | INFO | Event ID=4624 RecordID=5292 sent successfully
+2026-07-13 03:30:51,694 | INFO | Processed EventID=4624 RecordID=5292
+2026-07-13 03:30:51,702 | INFO | Event ID=4624 RecordID=5291 sent successfully
+2026-07-13 03:30:51,704 | INFO | Processed EventID=4624 RecordID=5291
+2026-07-13 03:30:51,711 | INFO | Event ID=4624 RecordID=5288 sent successfully
+2026-07-13 03:30:51,713 | INFO | Processed EventID=4624 RecordID=5288
+2026-07-13 03:30:51,721 | INFO | Event ID=4624 RecordID=5286 sent successfully
+2026-07-13 03:30:51,723 | INFO | Processed EventID=4624 RecordID=5286
+2026-07-13 03:30:51,730 | INFO | Event ID=4624 RecordID=5284 sent successfully
+2026-07-13 03:30:51,732 | INFO | Processed EventID=4624 RecordID=5284
+2026-07-13 03:30:51,739 | INFO | Event ID=4624 RecordID=5282 sent successfully
+2026-07-13 03:30:51,741 | INFO | Processed EventID=4624 RecordID=5282
+2026-07-13 03:30:51,749 | INFO | Event ID=4624 RecordID=5280 sent successfully
+2026-07-13 03:30:51,751 | INFO | Processed EventID=4624 RecordID=5280
+2026-07-13 03:30:51,759 | INFO | Event ID=4624 RecordID=5278 sent successfully
+2026-07-13 03:30:51,760 | INFO | Processed EventID=4624 RecordID=5278
+2026-07-13 03:30:51,767 | INFO | Event ID=4624 RecordID=5277 sent successfully
+2026-07-13 03:30:51,769 | INFO | Processed EventID=4624 RecordID=5277
+2026-07-13 03:30:51,776 | INFO | Event ID=4624 RecordID=5276 sent successfully
+2026-07-13 03:30:51,778 | INFO | Processed EventID=4624 RecordID=5276
+2026-07-13 03:30:51,786 | INFO | Event ID=4624 RecordID=5272 sent successfully
+2026-07-13 03:30:51,787 | INFO | Processed EventID=4624 RecordID=5272
+2026-07-13 03:30:51,795 | INFO | Event ID=4624 RecordID=5237 sent successfully
+2026-07-13 03:30:51,796 | INFO | Processed EventID=4624 RecordID=5237
+2026-07-13 03:30:51,804 | INFO | Event ID=4624 RecordID=5235 sent successfully
+2026-07-13 03:30:51,806 | INFO | Processed EventID=4624 RecordID=5235
+2026-07-13 03:30:51,814 | INFO | Event ID=4624 RecordID=5233 sent successfully
+2026-07-13 03:30:51,815 | INFO | Processed EventID=4624 RecordID=5233
+2026-07-13 03:30:51,823 | INFO | Event ID=4624 RecordID=5231 sent successfully
+2026-07-13 03:30:51,824 | INFO | Processed EventID=4624 RecordID=5231
+2026-07-13 03:30:51,832 | INFO | Event ID=4624 RecordID=5229 sent successfully
+2026-07-13 03:30:51,833 | INFO | Processed EventID=4624 RecordID=5229
+2026-07-13 03:30:51,840 | INFO | Event ID=4624 RecordID=5227 sent successfully
+2026-07-13 03:30:51,842 | INFO | Processed EventID=4624 RecordID=5227
+2026-07-13 03:30:51,850 | INFO | Event ID=4624 RecordID=5222 sent successfully
+2026-07-13 03:30:51,852 | INFO | Processed EventID=4624 RecordID=5222
+2026-07-13 03:30:51,858 | INFO | Event ID=4624 RecordID=5205 sent successfully
+2026-07-13 03:30:51,860 | INFO | Processed EventID=4624 RecordID=5205
+2026-07-13 03:30:51,868 | INFO | Event ID=4624 RecordID=5182 sent successfully
+2026-07-13 03:30:51,869 | INFO | Processed EventID=4624 RecordID=5182
+2026-07-13 03:30:51,875 | INFO | Event ID=4624 RecordID=5180 sent successfully
+2026-07-13 03:30:51,877 | INFO | Processed EventID=4624 RecordID=5180
+2026-07-13 03:30:51,884 | INFO | Event ID=4624 RecordID=5176 sent successfully
+2026-07-13 03:30:51,885 | INFO | Processed EventID=4624 RecordID=5176
+2026-07-13 03:30:51,893 | INFO | Event ID=4624 RecordID=5172 sent successfully
+2026-07-13 03:30:51,895 | INFO | Processed EventID=4624 RecordID=5172
+2026-07-13 03:30:51,902 | INFO | Event ID=4624 RecordID=5157 sent successfully
+2026-07-13 03:30:51,904 | INFO | Processed EventID=4624 RecordID=5157
+2026-07-13 03:30:51,911 | INFO | Event ID=4624 RecordID=5146 sent successfully
+2026-07-13 03:30:51,913 | INFO | Processed EventID=4624 RecordID=5146
+2026-07-13 03:30:51,920 | INFO | Event ID=4624 RecordID=5144 sent successfully
+2026-07-13 03:30:51,921 | INFO | Processed EventID=4624 RecordID=5144
+2026-07-13 03:30:51,928 | INFO | Event ID=4624 RecordID=5141 sent successfully
+2026-07-13 03:30:51,931 | INFO | Processed EventID=4624 RecordID=5141
+2026-07-13 03:30:51,938 | INFO | Event ID=4624 RecordID=5135 sent successfully
+2026-07-13 03:30:51,940 | INFO | Processed EventID=4624 RecordID=5135
+2026-07-13 03:30:51,947 | INFO | Event ID=4624 RecordID=5130 sent successfully
+2026-07-13 03:30:51,949 | INFO | Processed EventID=4624 RecordID=5130
+2026-07-13 03:30:51,956 | INFO | Event ID=4624 RecordID=5122 sent successfully
+2026-07-13 03:30:51,958 | INFO | Processed EventID=4624 RecordID=5122
+2026-07-13 03:30:51,965 | INFO | Event ID=4624 RecordID=5114 sent successfully
+2026-07-13 03:30:51,967 | INFO | Processed EventID=4624 RecordID=5114
+2026-07-13 03:30:51,975 | INFO | Event ID=4624 RecordID=5112 sent successfully
+2026-07-13 03:30:51,977 | INFO | Processed EventID=4624 RecordID=5112
+2026-07-13 03:30:51,986 | INFO | Event ID=4624 RecordID=5104 sent successfully
+2026-07-13 03:30:51,988 | INFO | Processed EventID=4624 RecordID=5104
+2026-07-13 03:30:51,997 | INFO | Event ID=4624 RecordID=5100 sent successfully
+2026-07-13 03:30:51,999 | INFO | Processed EventID=4624 RecordID=5100
+2026-07-13 03:30:52,020 | INFO | Event ID=4624 RecordID=5098 sent successfully
+2026-07-13 03:30:52,022 | INFO | Processed EventID=4624 RecordID=5098
+2026-07-13 03:30:52,030 | INFO | Event ID=4624 RecordID=5095 sent successfully
+2026-07-13 03:30:52,031 | INFO | Processed EventID=4624 RecordID=5095
+2026-07-13 03:30:52,038 | INFO | Event ID=4624 RecordID=5093 sent successfully
+2026-07-13 03:30:52,039 | INFO | Processed EventID=4624 RecordID=5093
+2026-07-13 03:30:52,047 | INFO | Event ID=4624 RecordID=5091 sent successfully
+2026-07-13 03:30:52,048 | INFO | Processed EventID=4624 RecordID=5091
+2026-07-13 03:30:52,055 | INFO | Event ID=4624 RecordID=5089 sent successfully
+2026-07-13 03:30:52,057 | INFO | Processed EventID=4624 RecordID=5089
+2026-07-13 03:30:52,065 | INFO | Event ID=4624 RecordID=5087 sent successfully
+2026-07-13 03:30:52,066 | INFO | Processed EventID=4624 RecordID=5087
+2026-07-13 03:30:52,073 | INFO | Event ID=4624 RecordID=5085 sent successfully
+2026-07-13 03:30:52,075 | INFO | Processed EventID=4624 RecordID=5085
+2026-07-13 03:30:52,082 | INFO | Event ID=4624 RecordID=5083 sent successfully
+2026-07-13 03:30:52,083 | INFO | Processed EventID=4624 RecordID=5083
+2026-07-13 03:30:52,090 | INFO | Event ID=4624 RecordID=5081 sent successfully
+2026-07-13 03:30:52,092 | INFO | Processed EventID=4624 RecordID=5081
+2026-07-13 03:30:52,099 | INFO | Event ID=4624 RecordID=5078 sent successfully
+2026-07-13 03:30:52,100 | INFO | Processed EventID=4624 RecordID=5078
+2026-07-13 03:30:52,107 | INFO | Event ID=4624 RecordID=5076 sent successfully
+2026-07-13 03:30:52,109 | INFO | Processed EventID=4624 RecordID=5076
+2026-07-13 03:30:52,115 | INFO | Event ID=4624 RecordID=5072 sent successfully
+2026-07-13 03:30:52,117 | INFO | Processed EventID=4624 RecordID=5072
+2026-07-13 03:30:52,124 | INFO | Event ID=4624 RecordID=5070 sent successfully
+2026-07-13 03:30:52,126 | INFO | Processed EventID=4624 RecordID=5070
+2026-07-13 03:30:52,133 | INFO | Event ID=4624 RecordID=5068 sent successfully
+2026-07-13 03:30:52,134 | INFO | Processed EventID=4624 RecordID=5068
+2026-07-13 03:30:52,142 | INFO | Event ID=4624 RecordID=5066 sent successfully
+2026-07-13 03:30:52,144 | INFO | Processed EventID=4624 RecordID=5066
+2026-07-13 03:30:52,150 | INFO | Event ID=4624 RecordID=5064 sent successfully
+2026-07-13 03:30:52,153 | INFO | Processed EventID=4624 RecordID=5064
+2026-07-13 03:30:52,160 | INFO | Event ID=4624 RecordID=5062 sent successfully
+2026-07-13 03:30:52,162 | INFO | Processed EventID=4624 RecordID=5062
+2026-07-13 03:30:52,169 | INFO | Event ID=4624 RecordID=5060 sent successfully
+2026-07-13 03:30:52,170 | INFO | Processed EventID=4624 RecordID=5060
+2026-07-13 03:30:52,177 | INFO | Event ID=4624 RecordID=5058 sent successfully
+2026-07-13 03:30:52,179 | INFO | Processed EventID=4624 RecordID=5058
+2026-07-13 03:30:52,186 | INFO | Event ID=4624 RecordID=5056 sent successfully
+2026-07-13 03:30:52,188 | INFO | Processed EventID=4624 RecordID=5056
+2026-07-13 03:30:52,194 | INFO | Event ID=4624 RecordID=5054 sent successfully
+2026-07-13 03:30:52,195 | INFO | Processed EventID=4624 RecordID=5054
+2026-07-13 03:30:52,203 | INFO | Event ID=4624 RecordID=5052 sent successfully
+2026-07-13 03:30:52,204 | INFO | Processed EventID=4624 RecordID=5052
+2026-07-13 03:30:52,211 | INFO | Event ID=4624 RecordID=5049 sent successfully
+2026-07-13 03:30:52,213 | INFO | Processed EventID=4624 RecordID=5049
+2026-07-13 03:30:52,220 | INFO | Event ID=4624 RecordID=5048 sent successfully
+2026-07-13 03:30:52,222 | INFO | Processed EventID=4624 RecordID=5048
+2026-07-13 03:30:52,228 | INFO | Event ID=4624 RecordID=5045 sent successfully
+2026-07-13 03:30:52,230 | INFO | Processed EventID=4624 RecordID=5045
+2026-07-13 03:30:52,237 | INFO | Event ID=4624 RecordID=5043 sent successfully
+2026-07-13 03:30:52,238 | INFO | Processed EventID=4624 RecordID=5043
+2026-07-13 03:30:52,246 | INFO | Event ID=4624 RecordID=5041 sent successfully
+2026-07-13 03:30:52,248 | INFO | Processed EventID=4624 RecordID=5041
+2026-07-13 03:30:52,255 | INFO | Event ID=4624 RecordID=5039 sent successfully
+2026-07-13 03:30:52,257 | INFO | Processed EventID=4624 RecordID=5039
+2026-07-13 03:30:52,264 | INFO | Event ID=4624 RecordID=5037 sent successfully
+2026-07-13 03:30:52,265 | INFO | Processed EventID=4624 RecordID=5037
+2026-07-13 03:30:52,273 | INFO | Event ID=4624 RecordID=5035 sent successfully
+2026-07-13 03:30:52,274 | INFO | Processed EventID=4624 RecordID=5035
+2026-07-13 03:30:52,281 | INFO | Event ID=4624 RecordID=5034 sent successfully
+2026-07-13 03:30:52,283 | INFO | Processed EventID=4624 RecordID=5034
+2026-07-13 03:30:52,289 | INFO | Event ID=4624 RecordID=5033 sent successfully
+2026-07-13 03:30:52,292 | INFO | Processed EventID=4624 RecordID=5033
+2026-07-13 03:30:52,298 | INFO | Event ID=4624 RecordID=5029 sent successfully
+2026-07-13 03:30:52,300 | INFO | Processed EventID=4624 RecordID=5029
+2026-07-13 03:30:52,308 | INFO | Event ID=4624 RecordID=5008 sent successfully
+2026-07-13 03:30:52,309 | INFO | Processed EventID=4624 RecordID=5008
+2026-07-13 03:30:52,316 | INFO | Event ID=4624 RecordID=5007 sent successfully
+2026-07-13 03:30:52,318 | INFO | Processed EventID=4624 RecordID=5007
+2026-07-13 03:30:52,325 | INFO | Event ID=4624 RecordID=5004 sent successfully
+2026-07-13 03:30:52,327 | INFO | Processed EventID=4624 RecordID=5004
+2026-07-13 03:30:52,334 | INFO | Event ID=4624 RecordID=4946 sent successfully
+2026-07-13 03:30:52,335 | INFO | Processed EventID=4624 RecordID=4946
+2026-07-13 03:30:52,342 | INFO | Event ID=4624 RecordID=4886 sent successfully
+2026-07-13 03:30:52,344 | INFO | Processed EventID=4624 RecordID=4886
+2026-07-13 03:30:52,350 | INFO | Event ID=4624 RecordID=4863 sent successfully
+2026-07-13 03:30:52,352 | INFO | Processed EventID=4624 RecordID=4863
+2026-07-13 03:30:52,359 | INFO | Event ID=4624 RecordID=4829 sent successfully
+2026-07-13 03:30:52,361 | INFO | Processed EventID=4624 RecordID=4829
+2026-07-13 03:30:52,368 | INFO | Event ID=4624 RecordID=4784 sent successfully
+2026-07-13 03:30:52,369 | INFO | Processed EventID=4624 RecordID=4784
+2026-07-13 03:30:52,376 | INFO | Event ID=4624 RecordID=4782 sent successfully
+2026-07-13 03:30:52,378 | INFO | Processed EventID=4624 RecordID=4782
+2026-07-13 03:30:52,384 | INFO | Event ID=4624 RecordID=4779 sent successfully
+2026-07-13 03:30:52,386 | INFO | Processed EventID=4624 RecordID=4779
+2026-07-13 03:30:52,393 | INFO | Event ID=4624 RecordID=4777 sent successfully
+2026-07-13 03:30:52,394 | INFO | Processed EventID=4624 RecordID=4777
+2026-07-13 03:30:52,401 | INFO | Event ID=4624 RecordID=4764 sent successfully
+2026-07-13 03:30:52,403 | INFO | Processed EventID=4624 RecordID=4764
+2026-07-13 03:30:52,410 | INFO | Event ID=4624 RecordID=4762 sent successfully
+2026-07-13 03:30:52,412 | INFO | Processed EventID=4624 RecordID=4762
+2026-07-13 03:30:52,420 | INFO | Event ID=4624 RecordID=4760 sent successfully
+2026-07-13 03:30:52,421 | INFO | Processed EventID=4624 RecordID=4760
+2026-07-13 03:30:52,429 | INFO | Event ID=4624 RecordID=4758 sent successfully
+2026-07-13 03:30:52,431 | INFO | Processed EventID=4624 RecordID=4758
+2026-07-13 03:30:52,437 | INFO | Event ID=4624 RecordID=4750 sent successfully
+2026-07-13 03:30:52,439 | INFO | Processed EventID=4624 RecordID=4750
+2026-07-13 03:30:52,446 | INFO | Event ID=4624 RecordID=4748 sent successfully
+2026-07-13 03:30:52,447 | INFO | Processed EventID=4624 RecordID=4748
+2026-07-13 03:30:52,454 | INFO | Event ID=4624 RecordID=4744 sent successfully
+2026-07-13 03:30:52,455 | INFO | Processed EventID=4624 RecordID=4744
+2026-07-13 03:30:52,462 | INFO | Event ID=4624 RecordID=4738 sent successfully
+2026-07-13 03:30:52,464 | INFO | Processed EventID=4624 RecordID=4738
+2026-07-13 03:30:52,471 | INFO | Event ID=4624 RecordID=4736 sent successfully
+2026-07-13 03:30:52,473 | INFO | Processed EventID=4624 RecordID=4736
+2026-07-13 03:30:52,480 | INFO | Event ID=4624 RecordID=4733 sent successfully
+2026-07-13 03:30:52,482 | INFO | Processed EventID=4624 RecordID=4733
+2026-07-13 03:30:52,489 | INFO | Event ID=4624 RecordID=4731 sent successfully
+2026-07-13 03:30:52,491 | INFO | Processed EventID=4624 RecordID=4731
+2026-07-13 03:30:52,498 | INFO | Event ID=4624 RecordID=4727 sent successfully
+2026-07-13 03:30:52,500 | INFO | Processed EventID=4624 RecordID=4727
+2026-07-13 03:30:52,507 | INFO | Event ID=4624 RecordID=4725 sent successfully
+2026-07-13 03:30:52,509 | INFO | Processed EventID=4624 RecordID=4725
+2026-07-13 03:30:52,516 | INFO | Event ID=4624 RecordID=4723 sent successfully
+2026-07-13 03:30:52,517 | INFO | Processed EventID=4624 RecordID=4723
+2026-07-13 03:30:52,524 | INFO | Event ID=4624 RecordID=4721 sent successfully
+2026-07-13 03:30:52,526 | INFO | Processed EventID=4624 RecordID=4721
+2026-07-13 03:30:52,534 | INFO | Event ID=4624 RecordID=4718 sent successfully
+2026-07-13 03:30:52,535 | INFO | Processed EventID=4624 RecordID=4718
+2026-07-13 03:30:52,543 | INFO | Event ID=4624 RecordID=4716 sent successfully
+2026-07-13 03:30:52,545 | INFO | Processed EventID=4624 RecordID=4716
+2026-07-13 03:30:52,553 | INFO | Event ID=4624 RecordID=4714 sent successfully
+2026-07-13 03:30:52,555 | INFO | Processed EventID=4624 RecordID=4714
+2026-07-13 03:30:52,563 | INFO | Event ID=4624 RecordID=4710 sent successfully
+2026-07-13 03:30:52,565 | INFO | Processed EventID=4624 RecordID=4710
+2026-07-13 03:30:52,574 | INFO | Event ID=4624 RecordID=4708 sent successfully
+2026-07-13 03:30:52,575 | INFO | Processed EventID=4624 RecordID=4708
+2026-07-13 03:30:52,584 | INFO | Event ID=4624 RecordID=4706 sent successfully
+2026-07-13 03:30:52,586 | INFO | Processed EventID=4624 RecordID=4706
+2026-07-13 03:30:52,594 | INFO | Event ID=4624 RecordID=4704 sent successfully
+2026-07-13 03:30:52,596 | INFO | Processed EventID=4624 RecordID=4704
+2026-07-13 03:30:52,605 | INFO | Event ID=4624 RecordID=4702 sent successfully
+2026-07-13 03:30:52,607 | INFO | Processed EventID=4624 RecordID=4702
+2026-07-13 03:30:52,615 | INFO | Event ID=4624 RecordID=4700 sent successfully
+2026-07-13 03:30:52,617 | INFO | Processed EventID=4624 RecordID=4700
+2026-07-13 03:30:52,625 | INFO | Event ID=4624 RecordID=4698 sent successfully
+2026-07-13 03:30:52,627 | INFO | Processed EventID=4624 RecordID=4698
+2026-07-13 03:30:52,634 | INFO | Event ID=4624 RecordID=4696 sent successfully
+2026-07-13 03:30:52,636 | INFO | Processed EventID=4624 RecordID=4696
+2026-07-13 03:30:52,644 | INFO | Event ID=4624 RecordID=4693 sent successfully
+2026-07-13 03:30:52,646 | INFO | Processed EventID=4624 RecordID=4693
+2026-07-13 03:30:52,655 | INFO | Event ID=4624 RecordID=4692 sent successfully
+2026-07-13 03:30:52,656 | INFO | Processed EventID=4624 RecordID=4692
+2026-07-13 03:30:52,664 | INFO | Event ID=4624 RecordID=4689 sent successfully
+2026-07-13 03:30:52,666 | INFO | Processed EventID=4624 RecordID=4689
+2026-07-13 03:30:52,674 | INFO | Event ID=4624 RecordID=4687 sent successfully
+2026-07-13 03:30:52,675 | INFO | Processed EventID=4624 RecordID=4687
+2026-07-13 03:30:52,683 | INFO | Event ID=4624 RecordID=4685 sent successfully
+2026-07-13 03:30:52,685 | INFO | Processed EventID=4624 RecordID=4685
+2026-07-13 03:30:52,693 | INFO | Event ID=4624 RecordID=4683 sent successfully
+2026-07-13 03:30:52,695 | INFO | Processed EventID=4624 RecordID=4683
+2026-07-13 03:30:52,703 | INFO | Event ID=4624 RecordID=4681 sent successfully
+2026-07-13 03:30:52,704 | INFO | Processed EventID=4624 RecordID=4681
+2026-07-13 03:30:52,712 | INFO | Event ID=4624 RecordID=4679 sent successfully
+2026-07-13 03:30:52,714 | INFO | Processed EventID=4624 RecordID=4679
+2026-07-13 03:30:52,722 | INFO | Event ID=4624 RecordID=4677 sent successfully
+2026-07-13 03:30:52,724 | INFO | Processed EventID=4624 RecordID=4677
+2026-07-13 03:30:52,732 | INFO | Event ID=4624 RecordID=4676 sent successfully
+2026-07-13 03:30:52,733 | INFO | Processed EventID=4624 RecordID=4676
+2026-07-13 03:30:52,741 | INFO | Event ID=4624 RecordID=4674 sent successfully
+2026-07-13 03:30:52,743 | INFO | Processed EventID=4624 RecordID=4674
+2026-07-13 03:30:52,750 | INFO | Event ID=4624 RecordID=4671 sent successfully
+2026-07-13 03:30:52,752 | INFO | Processed EventID=4624 RecordID=4671
+2026-07-13 03:30:52,759 | INFO | Event ID=4624 RecordID=4669 sent successfully
+2026-07-13 03:30:52,761 | INFO | Processed EventID=4624 RecordID=4669
+2026-07-13 03:30:52,768 | INFO | Event ID=4624 RecordID=4647 sent successfully
+2026-07-13 03:30:52,769 | INFO | Processed EventID=4624 RecordID=4647
+2026-07-13 03:30:52,776 | INFO | Event ID=4624 RecordID=4645 sent successfully
+2026-07-13 03:30:52,778 | INFO | Processed EventID=4624 RecordID=4645
+2026-07-13 03:30:52,784 | INFO | Event ID=4624 RecordID=4643 sent successfully
+2026-07-13 03:30:52,786 | INFO | Processed EventID=4624 RecordID=4643
+2026-07-13 03:30:52,794 | INFO | Event ID=4624 RecordID=4639 sent successfully
+2026-07-13 03:30:52,795 | INFO | Processed EventID=4624 RecordID=4639
+2026-07-13 03:30:52,802 | INFO | Event ID=4624 RecordID=4431 sent successfully
+2026-07-13 03:30:52,803 | INFO | Processed EventID=4624 RecordID=4431
+2026-07-13 03:30:52,810 | INFO | Event ID=4624 RecordID=4427 sent successfully
+2026-07-13 03:30:52,812 | INFO | Processed EventID=4624 RecordID=4427
+2026-07-13 03:30:52,819 | INFO | Event ID=4624 RecordID=4425 sent successfully
+2026-07-13 03:30:52,821 | INFO | Processed EventID=4624 RecordID=4425
+2026-07-13 03:30:52,828 | INFO | Event ID=4624 RecordID=4421 sent successfully
+2026-07-13 03:30:52,829 | INFO | Processed EventID=4624 RecordID=4421
+2026-07-13 03:30:52,836 | INFO | Event ID=4624 RecordID=4419 sent successfully
+2026-07-13 03:30:52,837 | INFO | Processed EventID=4624 RecordID=4419
+2026-07-13 03:30:52,844 | INFO | Event ID=4624 RecordID=4415 sent successfully
+2026-07-13 03:30:52,846 | INFO | Processed EventID=4624 RecordID=4415
+2026-07-13 03:30:52,853 | INFO | Event ID=4624 RecordID=4413 sent successfully
+2026-07-13 03:30:52,855 | INFO | Processed EventID=4624 RecordID=4413
+2026-07-13 03:30:52,862 | INFO | Event ID=4624 RecordID=4411 sent successfully
+2026-07-13 03:30:52,863 | INFO | Processed EventID=4624 RecordID=4411
+2026-07-13 03:30:52,871 | INFO | Event ID=4624 RecordID=4409 sent successfully
+2026-07-13 03:30:52,872 | INFO | Processed EventID=4624 RecordID=4409
+2026-07-13 03:30:52,879 | INFO | Event ID=4624 RecordID=4406 sent successfully
+2026-07-13 03:30:52,881 | INFO | Processed EventID=4624 RecordID=4406
+2026-07-13 03:30:52,888 | INFO | Event ID=4624 RecordID=4404 sent successfully
+2026-07-13 03:30:52,889 | INFO | Processed EventID=4624 RecordID=4404
+2026-07-13 03:30:52,897 | INFO | Event ID=4624 RecordID=4402 sent successfully
+2026-07-13 03:30:52,898 | INFO | Processed EventID=4624 RecordID=4402
+2026-07-13 03:30:52,905 | INFO | Event ID=4624 RecordID=4400 sent successfully
+2026-07-13 03:30:52,907 | INFO | Processed EventID=4624 RecordID=4400
+2026-07-13 03:30:52,913 | INFO | Event ID=4624 RecordID=4398 sent successfully
+2026-07-13 03:30:52,915 | INFO | Processed EventID=4624 RecordID=4398
+2026-07-13 03:30:52,922 | INFO | Event ID=4624 RecordID=4390 sent successfully
+2026-07-13 03:30:52,924 | INFO | Processed EventID=4624 RecordID=4390
+2026-07-13 03:30:52,931 | INFO | Event ID=4624 RecordID=4383 sent successfully
+2026-07-13 03:30:52,932 | INFO | Processed EventID=4624 RecordID=4383
+2026-07-13 03:30:52,939 | INFO | Event ID=4624 RecordID=4379 sent successfully
+2026-07-13 03:30:52,941 | INFO | Processed EventID=4624 RecordID=4379
+2026-07-13 03:30:52,948 | INFO | Event ID=4624 RecordID=4377 sent successfully
+2026-07-13 03:30:52,949 | INFO | Processed EventID=4624 RecordID=4377
+2026-07-13 03:30:52,956 | INFO | Event ID=4624 RecordID=4374 sent successfully
+2026-07-13 03:30:52,958 | INFO | Processed EventID=4624 RecordID=4374
+2026-07-13 03:30:52,965 | INFO | Event ID=4624 RecordID=4372 sent successfully
+2026-07-13 03:30:52,966 | INFO | Processed EventID=4624 RecordID=4372
+2026-07-13 03:30:52,974 | INFO | Event ID=4624 RecordID=4368 sent successfully
+2026-07-13 03:30:52,975 | INFO | Processed EventID=4624 RecordID=4368
+2026-07-13 03:30:52,982 | INFO | Event ID=4624 RecordID=4366 sent successfully
+2026-07-13 03:30:52,984 | INFO | Processed EventID=4624 RecordID=4366
+2026-07-13 03:30:52,990 | INFO | Event ID=4624 RecordID=4364 sent successfully
+2026-07-13 03:30:52,992 | INFO | Processed EventID=4624 RecordID=4364
+2026-07-13 03:30:52,999 | INFO | Event ID=4624 RecordID=4362 sent successfully
+2026-07-13 03:30:53,001 | INFO | Processed EventID=4624 RecordID=4362
+2026-07-13 03:30:53,008 | INFO | Event ID=4624 RecordID=4359 sent successfully
+2026-07-13 03:30:53,009 | INFO | Processed EventID=4624 RecordID=4359
+2026-07-13 03:30:53,016 | INFO | Event ID=4624 RecordID=4357 sent successfully
+2026-07-13 03:30:53,018 | INFO | Processed EventID=4624 RecordID=4357
+2026-07-13 03:30:53,024 | INFO | Event ID=4624 RecordID=4355 sent successfully
+2026-07-13 03:30:53,026 | INFO | Processed EventID=4624 RecordID=4355
+2026-07-13 03:30:53,033 | INFO | Event ID=4624 RecordID=4353 sent successfully
+2026-07-13 03:30:53,035 | INFO | Processed EventID=4624 RecordID=4353
+2026-07-13 03:30:53,042 | INFO | Event ID=4624 RecordID=4351 sent successfully
+2026-07-13 03:30:53,043 | INFO | Processed EventID=4624 RecordID=4351
+2026-07-13 03:30:53,050 | INFO | Event ID=4624 RecordID=4349 sent successfully
+2026-07-13 03:30:53,052 | INFO | Processed EventID=4624 RecordID=4349
+2026-07-13 03:30:53,058 | INFO | Event ID=4624 RecordID=4347 sent successfully
+2026-07-13 03:30:53,060 | INFO | Processed EventID=4624 RecordID=4347
+2026-07-13 03:30:53,066 | INFO | Event ID=4624 RecordID=4345 sent successfully
+2026-07-13 03:30:53,068 | INFO | Processed EventID=4624 RecordID=4345
+2026-07-13 03:30:53,074 | INFO | Event ID=4624 RecordID=4343 sent successfully
+2026-07-13 03:30:53,076 | INFO | Processed EventID=4624 RecordID=4343
+2026-07-13 03:30:53,083 | INFO | Event ID=4624 RecordID=4341 sent successfully
+2026-07-13 03:30:53,085 | INFO | Processed EventID=4624 RecordID=4341
+2026-07-13 03:30:53,092 | INFO | Event ID=4624 RecordID=4339 sent successfully
+2026-07-13 03:30:53,093 | INFO | Processed EventID=4624 RecordID=4339
+2026-07-13 03:30:53,100 | INFO | Event ID=4624 RecordID=4337 sent successfully
+2026-07-13 03:30:53,102 | INFO | Processed EventID=4624 RecordID=4337
+2026-07-13 03:30:53,108 | INFO | Event ID=4624 RecordID=4334 sent successfully
+2026-07-13 03:30:53,110 | INFO | Processed EventID=4624 RecordID=4334
+2026-07-13 03:30:53,116 | INFO | Event ID=4624 RecordID=4333 sent successfully
+2026-07-13 03:30:53,118 | INFO | Processed EventID=4624 RecordID=4333
+2026-07-13 03:30:53,124 | INFO | Event ID=4624 RecordID=4330 sent successfully
+2026-07-13 03:30:53,126 | INFO | Processed EventID=4624 RecordID=4330
+2026-07-13 03:30:53,133 | INFO | Event ID=4624 RecordID=4328 sent successfully
+2026-07-13 03:30:53,134 | INFO | Processed EventID=4624 RecordID=4328
+2026-07-13 03:30:53,141 | INFO | Event ID=4624 RecordID=4326 sent successfully
+2026-07-13 03:30:53,142 | INFO | Processed EventID=4624 RecordID=4326
+2026-07-13 03:30:53,149 | INFO | Event ID=4624 RecordID=4324 sent successfully
+2026-07-13 03:30:53,151 | INFO | Processed EventID=4624 RecordID=4324
+2026-07-13 03:30:53,158 | INFO | Event ID=4624 RecordID=4322 sent successfully
+2026-07-13 03:30:53,159 | INFO | Processed EventID=4624 RecordID=4322
+2026-07-13 03:30:53,165 | INFO | Event ID=4624 RecordID=4321 sent successfully
+2026-07-13 03:30:53,167 | INFO | Processed EventID=4624 RecordID=4321
+2026-07-13 03:30:53,174 | INFO | Collector stopped by user
+2026-07-13 03:30:53,174 | INFO | InsiderGuard Windows Collector stopped
