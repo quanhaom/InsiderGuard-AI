@@ -1,101 +1,77 @@
-from datetime import datetime
-
 from sqlalchemy.orm import Session
-
+from app.modules.evidence.service import EvidenceService
+from app.models.alert import Alert
 from app.models.incident import Incident
-from app.models.risk_assessment import RiskAssessment
-from app.repositories.incident_repository import IncidentRepository
 
 
 class IncidentService:
 
-    INCIDENT_THRESHOLD = 61
 
-    @classmethod
-    def create_from_risk_assessment(
-        cls,
+    @staticmethod
+    def create_from_alert(
         db: Session,
-        assessment: RiskAssessment
-    ) -> Incident | None:
-        if assessment.risk_score < cls.INCIDENT_THRESHOLD:
+        alert: Alert
+    ):
+
+        # Chỉ HIGH alert tạo incident
+
+        if alert.severity != "HIGH":
             return None
 
+
         incident = Incident(
-            username=assessment.username,
-            risk_assessment_id=assessment.id,
-            title=f"Potential insider threat detected for {assessment.username}",
-            severity=assessment.risk_level,
-            description=(
-                f"UEBA generated risk score "
-                f"{assessment.risk_score}. "
-                f"Indicators: {assessment.reasons}"
+
+            alert_id=alert.id,
+
+            username=alert.username,
+
+            title=(
+                "Suspicious user behavior detected"
             ),
-            status="OPEN"
+
+            severity=alert.severity,
+
+            status="OPEN",
+
+            description=alert.reason
         )
 
-        return IncidentRepository.create(
-            db=db,
-            incident=incident
+
+        db.add(
+            incident
         )
 
-    @staticmethod
-    def get_incident(
-        db: Session,
-        incident_id: int
-    ) -> Incident | None:
-        return IncidentRepository.get_by_id(
-            db=db,
-            incident_id=incident_id
+        db.commit()
+
+        db.refresh(
+            incident
         )
+        snapshot = {
 
-    @staticmethod
-    def get_all_incidents(
-        db: Session
-    ) -> list[Incident]:
-        return IncidentRepository.get_all(db=db)
+            "incident_id": incident.id,
 
-    @staticmethod
-    def get_user_incidents(
-        db: Session,
-        username: str
-    ) -> list[Incident]:
-        return IncidentRepository.get_by_username(
-            db=db,
-            username=username
-        )
+            "username": incident.username,
 
-    @staticmethod
-    def update_status(
-        db: Session,
-        incident: Incident,
-        new_status: str
-    ) -> Incident:
-        allowed_statuses = {
-            "OPEN",
-            "INVESTIGATING",
-            "RESOLVED",
-            "FALSE_POSITIVE"
+            "alert_id": alert.id,
+
+            "severity": alert.severity,
+
+            "risk_score": alert.risk_score,
+
+            "reason": alert.reason
+
         }
 
-        normalized_status = new_status.upper()
 
-        if normalized_status not in allowed_statuses:
-            raise ValueError(
-                "Invalid incident status. Allowed values: "
-                "OPEN, INVESTIGATING, RESOLVED, FALSE_POSITIVE"
-            )
+        EvidenceService.create_snapshot(
 
-        incident.status = normalized_status
-
-        if normalized_status in {
-            "RESOLVED",
-            "FALSE_POSITIVE"
-        }:
-            incident.resolved_at = datetime.utcnow()
-        else:
-            incident.resolved_at = None
-
-        return IncidentRepository.update(
             db=db,
-            incident=incident
+
+            incident_id=incident.id,
+
+            username=incident.username,
+
+            snapshot=snapshot
         )
+
+        return incident

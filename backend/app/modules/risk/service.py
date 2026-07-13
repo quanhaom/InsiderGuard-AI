@@ -44,5 +44,10 @@ class RiskEngine:
         db.add(assessment)
         db.commit()
         db.refresh(assessment)
+        from app.modules.alert.service import AlertService
+        AlertService.create_from_risk(
+            db=db,
+            assessment=assessment
+        )
 
         return assessment

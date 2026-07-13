@@ -1,7 +1,16 @@
 from datetime import datetime
 
-from sqlalchemy import String, Integer, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import (
+    Integer,
+    String,
+    DateTime,
+    Text
+)
+
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column
+)
 
 from app.db.base import Base
 
@@ -17,33 +26,30 @@ class Alert(Base):
     )
 
 
-    alert_type: Mapped[str] = mapped_column(
+    username: Mapped[str] = mapped_column(
         String,
-        nullable=False
+        index=True
+    )
+
+
+    alert_type: Mapped[str] = mapped_column(
+        String
     )
 
 
     severity: Mapped[str] = mapped_column(
-        String,
-        nullable=False
-    )
-
-
-    username: Mapped[str] = mapped_column(
-        String,
-        nullable=True
-    )
-
-
-    source_ip: Mapped[str] = mapped_column(
-        String,
-        nullable=True
+        String
     )
 
 
     risk_score: Mapped[int] = mapped_column(
-        Integer,
-        default=0
+        Integer
+    )
+
+
+    reason: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
     )
 
 

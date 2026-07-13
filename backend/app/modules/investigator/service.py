@@ -12,8 +12,12 @@ from app.modules.investigator.llm import (
 from app.modules.investigator.prompt_builder import (
     InvestigationPromptBuilder,
 )
-from app.repositories.evidence_repository import EvidenceRepository
-from app.repositories.incident_repository import IncidentRepository
+from app.repositories.evidence_repository import (
+    EvidenceRepository,
+)
+from app.repositories.incident_repository import (
+    IncidentRepository,
+)
 from app.repositories.investigation_repository import (
     InvestigationRepository,
 )
@@ -22,29 +26,64 @@ from app.repositories.investigation_repository import (
 class InvestigatorService:
 
     @staticmethod
-    def _serialize_incident(incident) -> dict[str, Any]:
+    def _serialize_incident(
+        incident
+    ) -> dict[str, Any]:
         return {
             "id": incident.id,
+            "alert_id": incident.alert_id,
             "username": incident.username,
-            "risk_assessment_id": incident.risk_assessment_id,
             "title": incident.title,
             "severity": incident.severity,
             "description": incident.description,
             "status": incident.status,
-            "detected_at": incident.detected_at,
-            "resolved_at": incident.resolved_at
+            "detected_at": incident.created_at,
+            "resolved_at": incident.closed_at,
         }
 
     @staticmethod
-    def _serialize_evidence(evidence) -> dict[str, Any]:
+    def _serialize_evidence(
+        evidence
+    ) -> dict[str, Any]:
+        try:
+            snapshot = json.loads(
+                evidence.snapshot_json
+            )
+        except (
+            json.JSONDecodeError,
+            TypeError,
+        ):
+            snapshot = {
+                "raw_snapshot": (
+                    evidence.snapshot_json
+                )
+            }
+
         return {
             "id": evidence.id,
             "incident_id": evidence.incident_id,
             "username": evidence.username,
             "evidence_type": evidence.evidence_type,
-            "snapshot": json.loads(evidence.snapshot_json),
+            "snapshot": snapshot,
             "sha256_hash": evidence.sha256_hash,
-            "created_at": evidence.created_at
+            "created_at": evidence.created_at,
+        }
+
+    @staticmethod
+    def _normalize_chain_verification(
+        result: dict[str, Any]
+    ) -> dict[str, Any]:
+        is_valid = bool(
+            result.get(
+                "is_valid",
+                result.get("verified", False),
+            )
+        )
+
+        return {
+            **result,
+            "is_valid": is_valid,
+            "verified": is_valid,
         }
 
     @classmethod
@@ -52,27 +91,36 @@ class InvestigatorService:
         cls,
         db: Session,
         incident_id: int,
-        llm: LLMProvider | None = None
+        llm: LLMProvider | None = None,
     ) -> InvestigationReport:
-        existing = InvestigationRepository.get_by_incident_id(
-            db=db,
-            incident_id=incident_id
+        # Mỗi incident chỉ có một report.
+        existing_report = (
+            InvestigationRepository
+            .get_by_incident_id(
+                db=db,
+                incident_id=incident_id,
+            )
         )
 
-        if existing is not None:
-            return existing
+        if existing_report is not None:
+            return existing_report
 
         incident = IncidentRepository.get_by_id(
             db=db,
-            incident_id=incident_id
+            incident_id=incident_id,
         )
 
         if incident is None:
-            raise ValueError("Incident not found")
+            raise ValueError(
+                "Incident not found"
+            )
 
-        evidences = EvidenceRepository.get_by_incident_id(
-            db=db,
-            incident_id=incident_id
+        evidences = (
+            EvidenceRepository
+            .get_by_incident_id(
+                db=db,
+                incident_id=incident_id,
+            )
         )
 
         if not evidences:
@@ -80,90 +128,155 @@ class InvestigatorService:
                 "No evidence found for this incident"
             )
 
+        # Hiện tại dùng evidence đầu tiên.
         evidence = evidences[0]
 
-        chain_verification = BlockchainService.verify_chain(db=db)
-
-        incident_data = cls._serialize_incident(incident)
-        evidence_data = cls._serialize_evidence(evidence)
-
-        prompt = InvestigationPromptBuilder.build(
-            incident=incident_data,
-            evidence=evidence_data,
-            blockchain_verification=chain_verification
+        chain_result = (
+            BlockchainService.verify_chain(
+                db=db
+            )
         )
 
-        provider = llm or MockInvestigationLLM()
+        chain_verification = (
+            cls._normalize_chain_verification(
+                chain_result
+            )
+        )
+
+        incident_data = (
+            cls._serialize_incident(
+                incident
+            )
+        )
+
+        evidence_data = (
+            cls._serialize_evidence(
+                evidence
+            )
+        )
+
+        prompt = (
+            InvestigationPromptBuilder.build(
+                incident=incident_data,
+                evidence=evidence_data,
+                blockchain_verification=(
+                    chain_verification
+                ),
+            )
+        )
+
+        provider = (
+            llm
+            or MockInvestigationLLM()
+        )
 
         generated = provider.generate_report(
             {
                 "incident": incident_data,
                 "evidence": evidence_data,
-                "blockchain_verification": chain_verification,
-                "prompt": prompt
+                "blockchain_verification": (
+                    chain_verification
+                ),
+                "prompt": prompt,
             }
+        )
+
+        recommendations = generated.get(
+            "recommendations",
+            [],
+        )
+
+        mitre_techniques = generated.get(
+            "mitre_techniques",
+            [],
         )
 
         report = InvestigationReport(
             incident_id=incident_id,
-            summary=generated["summary"],
-            analysis=generated["analysis"],
+            summary=generated.get(
+                "summary",
+                "No summary generated.",
+            ),
+            analysis=generated.get(
+                "analysis",
+                "No analysis generated.",
+            ),
             recommendations=json.dumps(
-                generated["recommendations"],
-                ensure_ascii=False
+                recommendations,
+                ensure_ascii=False,
             ),
             mitre_techniques=json.dumps(
-                generated["mitre_techniques"],
-                ensure_ascii=False
+                mitre_techniques,
+                ensure_ascii=False,
             ),
-            confidence=float(generated["confidence"]),
+            confidence=float(
+                generated.get(
+                    "confidence",
+                    0.0,
+                )
+            ),
             model_name=provider.model_name,
-            prompt_snapshot=prompt
+            prompt_snapshot=prompt,
         )
 
-        return InvestigationRepository.create(
-            db=db,
-            report=report
-        )
+        try:
+            return (
+                InvestigationRepository.create(
+                    db=db,
+                    report=report,
+                )
+            )
+
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def get_report(
         db: Session,
-        report_id: int
+        report_id: int,
     ) -> InvestigationReport | None:
         return InvestigationRepository.get_by_id(
             db=db,
-            report_id=report_id
+            report_id=report_id,
         )
 
     @staticmethod
     def get_incident_report(
         db: Session,
-        incident_id: int
+        incident_id: int,
     ) -> InvestigationReport | None:
-        return InvestigationRepository.get_by_incident_id(
-            db=db,
-            incident_id=incident_id
+        return (
+            InvestigationRepository
+            .get_by_incident_id(
+                db=db,
+                incident_id=incident_id,
+            )
         )
 
     @classmethod
     def regenerate_report(
         cls,
         db: Session,
-        incident_id: int
+        incident_id: int,
+        llm: LLMProvider | None = None,
     ) -> InvestigationReport:
-        existing = InvestigationRepository.get_by_incident_id(
-            db=db,
-            incident_id=incident_id
+        existing_report = (
+            InvestigationRepository
+            .get_by_incident_id(
+                db=db,
+                incident_id=incident_id,
+            )
         )
 
-        if existing is not None:
+        if existing_report is not None:
             InvestigationRepository.delete(
                 db=db,
-                report=existing
+                report=existing_report,
             )
 
         return cls.generate_report(
             db=db,
-            incident_id=incident_id
+            incident_id=incident_id,
+            llm=llm,
         )

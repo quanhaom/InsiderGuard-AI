@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.modules.ueba.router import router as ueba_router
 from app.modules.behavior_twin.router import (
     router as behavior_twin_router,
@@ -21,12 +22,53 @@ from app.modules.investigator.router import (
 from app.modules.collector.router import (
     router as collector_router,
 )
+from app.api.dashboard import router as dashboard_router
+from app.modules.event_explorer.router import (
+    router as event_explorer_router,
+)
+from app.modules.case_explorer.router import (
+    router as case_explorer_router,
+)
 
 app = FastAPI(
     title="InsiderGuard AI",
     version="1.0.0"
 )
+app.add_middleware(
 
+    CORSMiddleware,
+
+    allow_origins=[
+        "http://localhost:5173"
+    ],
+
+    allow_credentials=True,
+
+    allow_methods=[
+        "*"
+    ],
+
+    allow_headers=[
+        "*"
+    ]
+)
+
+app.include_router(
+    event_explorer_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    case_explorer_router,
+    prefix="/api/v1",
+)
+app.include_router(
+    dashboard_router,
+    prefix="/api/v1"
+)
+
+
+# Existing modules
 app.include_router(
     ueba_router,
     prefix="/api/v1"
@@ -56,14 +98,17 @@ app.include_router(
     behavior_twin_router,
     prefix="/api/v1"
 )
+
 app.include_router(
     incidents_router,
     prefix="/api/v1"
 )
+
 app.include_router(
     evidence_router,
     prefix="/api/v1"
 )
+
 
 @app.get("/")
 def root():
