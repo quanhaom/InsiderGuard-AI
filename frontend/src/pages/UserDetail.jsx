@@ -22,11 +22,26 @@ function UserDetail() {
   const [user, setUser] =
     useState(null);
 
+  const [
+    behaviorProfile,
+    setBehaviorProfile,
+  ] = useState(null);
+
   const [loading, setLoading] =
     useState(true);
 
   const [error, setError] =
     useState("");
+
+  const [
+    buildingProfile,
+    setBuildingProfile,
+  ] = useState(false);
+
+  const [
+    profileError,
+    setProfileError,
+  ] = useState("");
 
 
   const loadUser = useCallback(
@@ -34,20 +49,55 @@ function UserDetail() {
       try {
         setLoading(true);
         setError("");
+        setProfileError("");
 
         const response = await api.get(
           `/entities/users/${id}`
         );
 
-        setUser(response.data);
+        const loadedUser = response.data;
+
+        setUser(loadedUser);
+
+        try {
+          const profileResponse =
+            await api.get(
+              `/behavior-profile/${encodeURIComponent(
+                loadedUser.username
+              )}`
+            );
+
+          setBehaviorProfile(
+            profileResponse.data
+          );
+
+        } catch (profileRequestError) {
+          if (
+            profileRequestError.response
+              ?.status !== 404
+          ) {
+            console.error(
+              profileRequestError
+            );
+
+            setProfileError(
+              "Could not load behavior profile."
+            );
+          }
+
+          setBehaviorProfile(null);
+        }
+
       } catch (requestError) {
         console.error(requestError);
 
         setError(
-          requestError.response?.status === 404
+          requestError.response?.status
+            === 404
             ? "User not found."
             : "Could not load user."
         );
+
       } finally {
         setLoading(false);
       }
@@ -59,6 +109,39 @@ function UserDetail() {
   useEffect(() => {
     loadUser();
   }, [loadUser]);
+
+
+  async function buildBehaviorProfile() {
+    if (!user) {
+      return;
+    }
+
+    try {
+      setBuildingProfile(true);
+      setProfileError("");
+
+      const response = await api.post(
+        `/behavior-profile/build/${encodeURIComponent(
+          user.username
+        )}`
+      );
+
+      setBehaviorProfile(
+        response.data.profile
+      );
+
+    } catch (requestError) {
+      console.error(requestError);
+
+      setProfileError(
+        requestError.response?.data?.detail
+          || "Could not build behavior profile."
+      );
+
+    } finally {
+      setBuildingProfile(false);
+    }
+  }
 
 
   if (loading) {
@@ -74,18 +157,20 @@ function UserDetail() {
     return (
       <div className="user-full-message">
 
-        <h2>
-          {error || "User not found"}
-        </h2>
+        <div>
+          <h2>
+            {error || "User not found"}
+          </h2>
 
-        <button
-          type="button"
-          onClick={() =>
-            navigate("/users")
-          }
-        >
-          Back to Users
-        </button>
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/users")
+            }
+          >
+            Back to Users
+          </button>
+        </div>
 
       </div>
     );
@@ -115,8 +200,11 @@ function UserDetail() {
           </h1>
 
           <p>
-            {user.department || "Unknown department"}
+            {user.department
+              || "Unknown department"}
+
             {" · "}
+
             {user.role || "Unknown role"}
           </p>
         </div>
@@ -170,12 +258,11 @@ function UserDetail() {
 
           <strong
             className={
-              `user-risk-value user-risk-${risk.severity?.toLowerCase()}`
+              `user-risk-value user-risk-${risk.severity
+                ?.toLowerCase()}`
             }
           >
-            {risk.score}
-            {" "}
-            {risk.severity}
+            {risk.score} {risk.severity}
           </strong>
         </article>
 
@@ -194,6 +281,149 @@ function UserDetail() {
       <section className="users-panel user-detail-content">
 
         <div className="user-section-header">
+
+          <div>
+            <h2>Behavior Profile</h2>
+
+            <p>
+              Baseline derived from login
+              and device activity.
+            </p>
+          </div>
+
+
+          <button
+            type="button"
+            className="user-profile-button"
+            disabled={buildingProfile}
+            onClick={
+              buildBehaviorProfile
+            }
+          >
+            {buildingProfile
+              ? "Building..."
+              : behaviorProfile
+                ? "Rebuild Profile"
+                : "Build Profile"}
+          </button>
+
+        </div>
+
+
+        {profileError && (
+          <div className="user-profile-error">
+            {profileError}
+          </div>
+        )}
+
+
+        {!behaviorProfile ? (
+          <div className="user-empty-profile">
+
+            <p>
+              No behavior profile has been
+              built for this user.
+            </p>
+
+            <p>
+              Build a profile to calculate
+              login count, common IP and
+              common device.
+            </p>
+
+          </div>
+        ) : (
+          <div className="user-detail-grid">
+
+            <div>
+              <span>Login Count</span>
+
+              <strong>
+                {
+                  behaviorProfile
+                    .login_count
+                }
+              </strong>
+            </div>
+
+
+            <div>
+              <span>Common IP</span>
+
+              <strong>
+                {
+                  behaviorProfile
+                    .common_ip
+                  || "Unknown"
+                }
+              </strong>
+            </div>
+
+
+            <div>
+              <span>Common Host</span>
+
+              <strong>
+                {
+                  behaviorProfile
+                    .common_host
+                  || "Unknown"
+                }
+              </strong>
+            </div>
+
+
+            <div>
+              <span>First Seen</span>
+
+              <strong>
+                {behaviorProfile.first_seen
+                  ? new Date(
+                      behaviorProfile
+                        .first_seen
+                    ).toLocaleString()
+                  : "Unknown"}
+              </strong>
+            </div>
+
+
+            <div>
+              <span>Last Login</span>
+
+              <strong>
+                {behaviorProfile.last_login
+                  ? new Date(
+                      behaviorProfile
+                        .last_login
+                    ).toLocaleString()
+                  : "Unknown"}
+              </strong>
+            </div>
+
+
+            <div>
+              <span>Profile Updated</span>
+
+              <strong>
+                {behaviorProfile.last_seen
+                  ? new Date(
+                      behaviorProfile
+                        .last_seen
+                    ).toLocaleString()
+                  : "Unknown"}
+              </strong>
+            </div>
+
+          </div>
+        )}
+
+      </section>
+
+
+      <section className="users-panel user-detail-content">
+
+        <div className="user-section-header">
+
           <div>
             <h2>Current Risk</h2>
 
@@ -202,6 +432,7 @@ function UserDetail() {
               for this user.
             </p>
           </div>
+
         </div>
 
 
@@ -215,6 +446,7 @@ function UserDetail() {
             </strong>
           </div>
 
+
           <div>
             <span>Severity</span>
 
@@ -222,6 +454,7 @@ function UserDetail() {
               {risk.severity}
             </strong>
           </div>
+
 
           <div className="user-detail-wide">
             <span>Reason</span>
@@ -231,6 +464,7 @@ function UserDetail() {
                 || "No active risk reason"}
             </strong>
           </div>
+
 
           <div>
             <span>Assessed At</span>
@@ -252,6 +486,7 @@ function UserDetail() {
       <section className="users-panel user-detail-content">
 
         <div className="user-section-header">
+
           <div>
             <h2>Known Devices</h2>
 
@@ -260,13 +495,15 @@ function UserDetail() {
               with this username.
             </p>
           </div>
+
         </div>
 
 
         {!user.devices
         || user.devices.length === 0 ? (
           <p className="user-muted-text">
-            No devices associated with this user.
+            No devices associated with
+            this user.
           </p>
         ) : (
           <div className="user-entity-list">
@@ -295,9 +532,11 @@ function UserDetail() {
                     </small>
                   </div>
 
+
                   <span
                     className={
-                      `user-device-status user-device-${device.status?.toLowerCase()}`
+                      `user-device-status user-device-${device.status
+                        ?.toLowerCase()}`
                     }
                   >
                     {device.status}
@@ -316,6 +555,7 @@ function UserDetail() {
       <section className="users-panel user-detail-content">
 
         <div className="user-section-header">
+
           <div>
             <h2>Incidents</h2>
 
@@ -324,13 +564,15 @@ function UserDetail() {
               to this user.
             </p>
           </div>
+
         </div>
 
 
         {!user.incidents
         || user.incidents.length === 0 ? (
           <p className="user-muted-text">
-            No incidents associated with this user.
+            No incidents associated with
+            this user.
           </p>
         ) : (
           <div className="user-entity-list">
@@ -363,11 +605,13 @@ function UserDetail() {
                     </small>
                   </div>
 
+
                   <div className="user-item-badges">
 
                     <span
                       className={
-                        `user-incident-severity user-severity-${incident.severity?.toLowerCase()}`
+                        `user-incident-severity user-severity-${incident.severity
+                          ?.toLowerCase()}`
                       }
                     >
                       {incident.severity}
@@ -392,6 +636,7 @@ function UserDetail() {
       <section className="users-panel user-detail-content">
 
         <div className="user-section-header">
+
           <div>
             <h2>Risk History</h2>
 
@@ -400,6 +645,7 @@ function UserDetail() {
               risk assessments.
             </p>
           </div>
+
         </div>
 
 
@@ -420,7 +666,9 @@ function UserDetail() {
 
                   <div>
                     <strong>
-                      Risk {riskItem.risk_score}
+                      Risk {
+                        riskItem.risk_score
+                      }
                     </strong>
 
                     <p>
@@ -428,6 +676,7 @@ function UserDetail() {
                         || "No reason provided"}
                     </p>
                   </div>
+
 
                   <div className="user-history-meta">
 
@@ -458,6 +707,7 @@ function UserDetail() {
       <section className="users-panel user-detail-content">
 
         <div className="user-section-header">
+
           <div>
             <h2>Recent Logins</h2>
 
@@ -466,6 +716,7 @@ function UserDetail() {
               activity for this user.
             </p>
           </div>
+
         </div>
 
 
@@ -494,6 +745,7 @@ function UserDetail() {
                       Successful login event
                     </p>
                   </div>
+
 
                   <small>
                     {login.login_time

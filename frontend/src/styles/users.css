@@ -423,4 +423,66 @@
   .user-history-meta {
     text-align: left;
   }
+
+  .user-profile-button {
+  min-height: 40px;
+
+  border: 1px solid #0ea5e9;
+  border-radius: 8px;
+  padding: 8px 14px;
+
+  color: #bae6fd;
+  background:
+    rgba(14, 165, 233, 0.12);
+
+  font: inherit;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.user-profile-button:hover {
+  border-color: #38bdf8;
+  background:
+    rgba(14, 165, 233, 0.22);
+}
+
+.user-profile-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.user-profile-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+
+  border: 1px solid
+    rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+
+  color: #fecaca;
+  background:
+    rgba(127, 29, 29, 0.25);
+}
+
+.user-empty-profile {
+  padding: 18px;
+
+  border: 1px dashed #334155;
+  border-radius: 9px;
+
+  color: #94a3b8;
+  background:
+    rgba(2, 6, 23, 0.45);
+}
+
+.user-empty-profile p {
+  margin: 0;
+}
+
+.user-empty-profile p + p {
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 13px;
+}
 }
