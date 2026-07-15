@@ -3,9 +3,11 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
-
+import UserDetail from "./pages/UserDetail";
+import Users from "./pages/Users";
 import AppLayout from "./components/AppLayout";
-
+import DeviceDetail from "./pages/DeviceDetail";
+import Devices from "./pages/Devices";
 import Dashboard from "./pages/Dashboard";
 import EventDetail from "./pages/EventDetail";
 import Events from "./pages/Events";
@@ -27,6 +29,25 @@ function App() {
           <Route
             path="/"
             element={<Dashboard />}
+          />
+
+          <Route
+            path="/users"
+            element={<Users />}
+          />
+
+          <Route
+            path="/users/:id"
+            element={<UserDetail />}
+          />
+          <Route
+            path="/devices"
+            element={<Devices />}
+          />
+
+          <Route
+            path="/devices/:id"
+            element={<DeviceDetail />}
           />
 
           <Route

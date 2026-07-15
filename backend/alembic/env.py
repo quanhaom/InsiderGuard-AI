@@ -1,19 +1,23 @@
 from logging.config import fileConfig
-from app.db.base import Base
+
+from alembic import context
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from app.models.user import User
-from app.models.login_event import LoginEvent
-from app.models.behavior_profile import BehaviorProfile
-from app.models.risk_assessment import RiskAssessment
-from app.models.incident import Incident
-from alembic import context
-from app.models.evidence import Evidence
-from app.models.blockchain_block import BlockchainBlock
-from app.models.investigation_report import InvestigationReport
-from app.models.raw_windows_event import RawWindowsEvent
-from app.models.failed_login_event import FailedLoginEvent
+
+from app.db.base import Base
+
 from app.models.alert import Alert
+from app.models.behavior_profile import BehaviorProfile
+from app.models.blockchain_block import BlockchainBlock
+from app.models.device import Device
+from app.models.evidence import Evidence
+from app.models.failed_login_event import FailedLoginEvent
+from app.models.incident import Incident
+from app.models.investigation_report import InvestigationReport
+from app.models.login_event import LoginEvent
+from app.models.raw_windows_event import RawWindowsEvent
+from app.models.risk_assessment import RiskAssessment
+from app.models.user import User
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

@@ -4,6 +4,9 @@ from app.modules.ueba.router import router as ueba_router
 from app.modules.behavior_twin.router import (
     router as behavior_twin_router,
 )
+from app.modules.entities.router import (
+    router as entities_router,
+)
 from app.modules.events.router import (
     router as events_router,
 )
@@ -29,7 +32,9 @@ from app.modules.event_explorer.router import (
 from app.modules.case_explorer.router import (
     router as case_explorer_router,
 )
-
+from app.modules.behavior_profile.router import (
+    router as behavior_profile_router,
+)
 app = FastAPI(
     title="InsiderGuard AI",
     version="1.0.0"
@@ -51,6 +56,11 @@ app.add_middleware(
     allow_headers=[
         "*"
     ]
+)
+
+app.include_router(
+    entities_router,
+    prefix="/api/v1",
 )
 
 app.include_router(
@@ -102,6 +112,10 @@ app.include_router(
 app.include_router(
     incidents_router,
     prefix="/api/v1"
+)
+app.include_router(
+    behavior_profile_router,
+    prefix="/api/v1",
 )
 
 app.include_router(

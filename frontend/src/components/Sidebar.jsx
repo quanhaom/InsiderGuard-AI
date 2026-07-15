@@ -9,16 +9,24 @@ const navigationItems = [
     path: "/",
   },
   {
-    label: "Events",
-    path: "/events",
-  },
-  {
     label: "Incidents",
     path: "/incidents",
   },
   {
+    label: "Events",
+    path: "/events",
+  },
+  {
+  label: "Users",
+  path: "/users",
+  },
+  {
     label: "Evidence",
     path: "/evidences",
+  },
+  {
+    label: "Devices",
+    path: "/devices",
   },
 ];
 

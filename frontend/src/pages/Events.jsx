@@ -7,6 +7,7 @@ import {
 
 import {
   useNavigate,
+  useSearchParams,
 } from "react-router-dom";
 
 import api from "../api/client";
@@ -27,23 +28,42 @@ const INITIAL_FILTERS = {
 function Events() {
   const navigate = useNavigate();
 
-  const [filters, setFilters] = useState(
-    INITIAL_FILTERS
-  );
+  const [searchParams] =
+    useSearchParams();
 
-  const [appliedFilters, setAppliedFilters] =
-    useState(INITIAL_FILTERS);
+  const initialFilters = {
+    ...INITIAL_FILTERS,
+    event_id:
+      searchParams.get("event_id") || "",
+    computer:
+      searchParams.get("computer") || "",
+  };
 
-  const [events, setEvents] = useState([]);
 
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] =
+    useState(initialFilters);
 
-  const [pageSize, setPageSize] = useState(25);
+  const [
+    appliedFilters,
+    setAppliedFilters,
+  ] = useState(initialFilters);
 
-  const [total, setTotal] = useState(0);
+  const [events, setEvents] =
+    useState([]);
 
-  const [totalPages, setTotalPages] =
+  const [page, setPage] =
+    useState(1);
+
+  const [pageSize, setPageSize] =
+    useState(25);
+
+  const [total, setTotal] =
     useState(0);
+
+  const [
+    totalPages,
+    setTotalPages,
+  ] = useState(0);
 
   const [loading, setLoading] =
     useState(true);
@@ -59,37 +79,41 @@ function Events() {
     };
 
     if (appliedFilters.event_id) {
-      params.event_id =
-        Number(appliedFilters.event_id);
+      params.event_id = Number(
+        appliedFilters.event_id
+      );
     }
 
     if (appliedFilters.record_id) {
-      params.record_id =
-        Number(appliedFilters.record_id);
+      params.record_id = Number(
+        appliedFilters.record_id
+      );
     }
 
-    if (appliedFilters.computer.trim()) {
+    if (
+      appliedFilters.computer.trim()
+    ) {
       params.computer =
         appliedFilters.computer.trim();
     }
 
-    if (appliedFilters.provider.trim()) {
+    if (
+      appliedFilters.provider.trim()
+    ) {
       params.provider =
         appliedFilters.provider.trim();
     }
 
     if (appliedFilters.start_time) {
-      params.start_time =
-        new Date(
-          appliedFilters.start_time
-        ).toISOString();
+      params.start_time = new Date(
+        appliedFilters.start_time
+      ).toISOString();
     }
 
     if (appliedFilters.end_time) {
-      params.end_time =
-        new Date(
-          appliedFilters.end_time
-        ).toISOString();
+      params.end_time = new Date(
+        appliedFilters.end_time
+      ).toISOString();
     }
 
     return params;
@@ -182,7 +206,10 @@ function Events() {
 
   function goToPreviousPage() {
     setPage((current) =>
-      Math.max(1, current - 1)
+      Math.max(
+        1,
+        current - 1
+      )
     );
   }
 
@@ -234,6 +261,7 @@ function Events() {
         >
 
           <div className="filter-field">
+
             <label htmlFor="event_id">
               Event ID
             </label>
@@ -248,10 +276,12 @@ function Events() {
                 handleInputChange
               }
             />
+
           </div>
 
 
           <div className="filter-field">
+
             <label htmlFor="record_id">
               Record ID
             </label>
@@ -266,10 +296,12 @@ function Events() {
                 handleInputChange
               }
             />
+
           </div>
 
 
           <div className="filter-field">
+
             <label htmlFor="computer">
               Computer
             </label>
@@ -278,16 +310,18 @@ function Events() {
               id="computer"
               name="computer"
               type="text"
-              placeholder="T-01"
+              placeholder="ADMIN-LAPTOP"
               value={filters.computer}
               onChange={
                 handleInputChange
               }
             />
+
           </div>
 
 
           <div className="filter-field">
+
             <label htmlFor="provider">
               Provider
             </label>
@@ -302,10 +336,12 @@ function Events() {
                 handleInputChange
               }
             />
+
           </div>
 
 
           <div className="filter-field">
+
             <label htmlFor="start_time">
               Start Time
             </label>
@@ -319,10 +355,12 @@ function Events() {
                 handleInputChange
               }
             />
+
           </div>
 
 
           <div className="filter-field">
+
             <label htmlFor="end_time">
               End Time
             </label>
@@ -336,6 +374,7 @@ function Events() {
                 handleInputChange
               }
             />
+
           </div>
 
 
@@ -390,7 +429,9 @@ function Events() {
               value={pageSize}
               onChange={(event) => {
                 setPageSize(
-                  Number(event.target.value)
+                  Number(
+                    event.target.value
+                  )
                 );
 
                 setPage(1);
@@ -477,13 +518,13 @@ function Events() {
                       </td>
 
                       <td>
-                        {item.computer ||
-                          "Unknown"}
+                        {item.computer
+                          || "Unknown"}
                       </td>
 
                       <td>
-                        {item.provider ||
-                          "Unknown"}
+                        {item.provider
+                          || "Unknown"}
                       </td>
 
                       <td>
@@ -526,7 +567,8 @@ function Events() {
             type="button"
             className="secondary-button"
             disabled={
-              page <= 1 || loading
+              page <= 1
+              || loading
             }
             onClick={
               goToPreviousPage
@@ -546,9 +588,9 @@ function Events() {
             type="button"
             className="secondary-button"
             disabled={
-              page >= totalPages ||
-              totalPages === 0 ||
-              loading
+              page >= totalPages
+              || totalPages === 0
+              || loading
             }
             onClick={
               goToNextPage

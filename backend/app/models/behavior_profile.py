@@ -1,7 +1,16 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import (
+    DateTime,
+    Float,
+    Integer,
+    JSON,
+    String,
+)
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+)
 
 from app.db.base import Base
 
@@ -16,10 +25,12 @@ class BehaviorProfile(Base):
     )
 
     username: Mapped[str] = mapped_column(
-        String,
+        String(100),
         unique=True,
         index=True
     )
+
+    # Existing
 
     login_count: Mapped[int] = mapped_column(
         Integer,
@@ -27,13 +38,42 @@ class BehaviorProfile(Base):
     )
 
     common_ip: Mapped[str] = mapped_column(
-        String,
+        String(100),
         default=""
     )
 
     common_host: Mapped[str] = mapped_column(
-        String,
+        String(100),
         default=""
+    )
+
+    # New UEBA features
+
+    avg_login_hour: Mapped[float] = mapped_column(
+        Float,
+        default=0
+    )
+
+    avg_failed_logins_per_day: Mapped[
+        float
+    ] = mapped_column(
+        Float,
+        default=0
+    )
+
+    known_ips: Mapped[list] = mapped_column(
+        JSON,
+        default=list
+    )
+
+    known_devices: Mapped[list] = mapped_column(
+        JSON,
+        default=list
+    )
+
+    risk_baseline: Mapped[float] = mapped_column(
+        Float,
+        default=0
     )
 
     first_seen: Mapped[datetime] = mapped_column(
@@ -49,4 +89,10 @@ class BehaviorProfile(Base):
     last_login: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
     )
