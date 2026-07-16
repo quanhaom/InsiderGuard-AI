@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
+from app.modules.incidents.timeline_service import (
+    IncidentTimelineService
+)
 from app.db.dependencies import get_db
 from app.modules.incidents.service import IncidentService
 from app.schemas.incident import (
@@ -60,6 +62,22 @@ def get_incident(
 
     return incident
 
+
+@router.get(
+    "/{incident_id}/timeline"
+)
+def get_incident_timeline(
+    incident_id:int,
+    db:Session = Depends(get_db)
+):
+
+    return (
+        IncidentTimelineService
+        .get_timeline(
+            db=db,
+            incident_id=incident_id
+        )
+    )
 
 @router.patch(
     "/{incident_id}/status",

@@ -40,8 +40,15 @@ class Parser4624(BaseParser):
 
 
         if not username:
+            available_fields = ", ".join(
+                sorted(data.keys())
+            )
+
             raise ValueError(
-                "Missing username in Event 4624"
+                "Missing TargetUserName in "
+                "Windows Event 4624. "
+                f"Available fields: "
+                f"{available_fields or 'none'}"
             )
 
 

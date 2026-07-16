@@ -1,164 +1,150 @@
 import { useNavigate } from "react-router-dom";
 
-
-function IncidentTable({ incidents }) {
+function IncidentTable({
+  incidents = [],
+}) {
 
   const navigate = useNavigate();
 
 
+  if (!incidents.length) {
+
+    return (
+
+      <section className="dashboard-panel">
+
+        <h3>
+          Recent Incidents
+        </h3>
+
+        <p>
+          No active incidents.
+        </p>
+
+      </section>
+
+    );
+  }
+
+
+
   return (
-    <section className="panel">
+
+    <section className="dashboard-panel">
+
 
       <div className="panel-header">
-        <div>
-          <h2>
-            Open Incidents
-          </h2>
 
-          <p>
-            Incidents requiring investigation
-          </p>
-        </div>
+        <h3>
+          Recent Incidents
+        </h3>
+
+        <span>
+          {incidents.length} items
+        </span>
+
       </div>
 
 
-      <div className="table-wrapper">
 
-        <table>
-
-          <thead>
-
-            <tr>
-              <th>ID</th>
-              <th>User</th>
-              <th>Title</th>
-              <th>Severity</th>
-              <th>Status</th>
-              <th>Created</th>
-            </tr>
-
-          </thead>
+      <div className="incident-table">
 
 
-          <tbody>
+        {incidents.map(
+          (incident) => (
 
-            {
-              incidents.length === 0 ? (
-
-                <tr>
-
-                  <td 
-                    colSpan="6"
-                    className="empty-state"
-                  >
-                    No open incidents.
-                  </td>
-
-                </tr>
-
-              ) : (
-
-                incidents.map((incident) => (
-
-                  <tr
-                    key={incident.id}
-                  >
+            <div
+              className="incident-row"
+              key={incident.id}
+            >
 
 
-                    <td>
+              <div className="incident-info">
 
-                      <button
+                <strong>
 
-                        className="incident-link"
+                  #{incident.id}
+                  {" "}
+                  {incident.title}
 
-                        onClick={() =>
-                          navigate(
-                            `/investigation/${incident.id}`
-                          )
-                        }
+                </strong>
 
-                      >
 
-                        #{incident.id}
+                <p>
 
-                      </button>
+                  User:
+                  {" "}
+                  {incident.username}
 
-                    </td>
+                </p>
+
+
+              </div>
 
 
 
-                    <td>
-                      {incident.username}
-                    </td>
+              <div className="incident-meta">
+
+
+                <span
+                  className={
+                    `severity-${incident.severity?.toLowerCase()}`
+                  }
+                >
+
+                  {incident.severity}
+
+                </span>
 
 
 
-                    <td>
-                      {incident.title}
-                    </td>
+                <span
+                  className={
+                    `status-${incident.status?.toLowerCase()}`
+                  }
+                >
+
+                  {incident.status}
+
+                </span>
 
 
 
-                    <td>
-
-                      <span
-                        className={
-                          `badge badge-${
-                            incident.severity?.toLowerCase()
-                          }`
-                        }
-                      >
-
-                        {incident.severity}
-
-                      </span>
-
-                    </td>
+              </div>
 
 
 
-                    <td>
+              <button
 
-                      <span
-                        className="badge badge-open"
-                      >
+                type="button"
 
-                        {incident.status}
+                className="review-button"
 
-                      </span>
+                onClick={() =>
+                  navigate(
+                    `/incidents/${incident.id}`
+                  )
+                }
 
-                    </td>
+              >
 
+                Review
 
-
-                    <td>
-
-                      {
-                        new Date(
-                          incident.created_at
-                        ).toLocaleString()
-                      }
-
-                    </td>
+              </button>
 
 
-                  </tr>
+            </div>
 
-                ))
+          )
 
-              )
-            }
-
-
-          </tbody>
-
-        </table>
+        )}
 
 
       </div>
 
 
     </section>
+
   );
 }
 

@@ -57,7 +57,8 @@ class EvidenceService:
         )
         BlockchainService.create_block(
             db=db,
-            evidence_hash=evidence.sha256_hash
-)
+            evidence_id=evidence.id,
+            evidence_hash=evidence.sha256_hash,
+        )
 
         return evidence

@@ -7,6 +7,9 @@ from app.modules.behavior_twin.router import (
 from app.modules.entities.router import (
     router as entities_router,
 )
+from app.modules.windows_events.router import (
+    router as windows_event_router
+)
 from app.modules.events.router import (
     router as events_router,
 )
@@ -24,6 +27,9 @@ from app.modules.investigator.router import (
 )
 from app.modules.collector.router import (
     router as collector_router,
+)
+from app.modules.dashboard.router import (
+    router as dashboard_router,
 )
 from app.api.dashboard import router as dashboard_router
 from app.modules.event_explorer.router import (
@@ -76,7 +82,14 @@ app.include_router(
     dashboard_router,
     prefix="/api/v1"
 )
-
+app.include_router(
+    dashboard_router,
+    prefix="/api/v1",
+)
+app.include_router(
+    windows_event_router,
+    prefix="/api/v1"
+)
 
 # Existing modules
 app.include_router(

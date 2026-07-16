@@ -10,7 +10,6 @@ import EvidenceCard from "../components/EvidenceCard";
 import IncidentTable from "../components/IncidentTable";
 //import RiskChart from "../components/RiskChart";
 import StatCard from "../components/StatCard";
-import { useNavigate } from "react-router-dom";
 import "../styles/dashboard.css";
 
 const EMPTY_OVERVIEW = {

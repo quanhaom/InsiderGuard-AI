@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.models.behavior_profile import BehaviorProfile
+from app.models.behavior_profile import (
+    BehaviorProfile,
+)
 from app.models.login_event import LoginEvent
 
 
@@ -15,56 +17,92 @@ class RiskResult:
 class RiskEngine:
     NIGHT_LOGIN_SCORE = 20
     WEEKEND_LOGIN_SCORE = 15
-    NEW_IP_SCORE = 15
+    NEW_IP_SCORE = 30
     ABNORMAL_LOGIN_TIME_SCORE = 25
 
     NIGHT_START_HOUR = 22
     NIGHT_END_HOUR = 6
-    MAX_LOGIN_TIME_DEVIATION = 3
+
+    MAX_LOGIN_TIME_DEVIATION = 3.0
 
     @classmethod
     def evaluate_login(
         cls,
         event: LoginEvent,
-        profile: BehaviorProfile
+        profile: BehaviorProfile,
     ) -> RiskResult:
         score = 0
         reasons: list[str] = []
 
-        if cls._is_night_login(event.login_time):
+        if cls._is_night_login(
+            event.login_time
+        ):
             score += cls.NIGHT_LOGIN_SCORE
-            reasons.append("Night Login")
 
-        if cls._is_weekend_login(event.login_time):
+            reasons.append(
+                "Login occurred during night hours"
+            )
+
+        if cls._is_weekend_login(
+            event.login_time
+        ):
             score += cls.WEEKEND_LOGIN_SCORE
-            reasons.append("Weekend Login")
+
+            reasons.append(
+                "Login occurred during weekend"
+            )
 
         if cls._is_new_ip(
             current_ip=event.source_ip,
-            common_ip=profile.common_source_ip
+            profile=profile,
         ):
             score += cls.NEW_IP_SCORE
-            reasons.append("New IP Address")
+
+            reasons.append(
+                f"New IP address detected: "
+                f"{event.source_ip}"
+            )
 
         if cls._is_abnormal_login_time(
-            current_login_time=event.login_time,
-            average_login_hour=profile.avg_login_hour
+            current_login_time=(
+                event.login_time
+            ),
+            average_login_hour=(
+                profile.avg_login_hour
+            ),
+            login_count=(
+                profile.login_count
+            ),
         ):
-            score += cls.ABNORMAL_LOGIN_TIME_SCORE
-            reasons.append("Abnormal Login Time")
+            score += (
+                cls.ABNORMAL_LOGIN_TIME_SCORE
+            )
+
+            reasons.append(
+                "Login time deviates from "
+                "the user's behavior baseline"
+            )
 
         score = min(score, 100)
 
+        if not reasons:
+            reasons.append(
+                "No significant behavior "
+                "anomaly detected"
+            )
+
         return RiskResult(
             score=score,
-            level=cls.get_risk_level(score),
-            reasons=reasons
+            level=cls.get_risk_level(
+                score
+            ),
+            reasons=reasons,
         )
 
     @classmethod
     def _is_night_login(
         cls,
-        login_time: datetime
+        login_time: datetime,
     ) -> bool:
         hour = login_time.hour
 
@@ -75,51 +113,89 @@ class RiskEngine:
 
     @staticmethod
     def _is_weekend_login(
-        login_time: datetime
+        login_time: datetime,
     ) -> bool:
-        return login_time.weekday() >= 5
+        return (
+            login_time.weekday() >= 5
+        )
 
     @staticmethod
     def _is_new_ip(
-        current_ip: str,
-        common_ip: str | None
+        current_ip: str | None,
+        profile: BehaviorProfile,
     ) -> bool:
-        if common_ip is None:
+        if not current_ip:
             return False
 
-        return current_ip != common_ip
+        known_ips = (
+            profile.known_ips or []
+        )
+
+        # Profile cũ chưa có known_ips:
+        # dùng common_ip làm fallback.
+        if not known_ips:
+            if not profile.common_ip:
+                return False
+
+            return (
+                current_ip
+                != profile.common_ip
+            )
+
+        return (
+            current_ip
+            not in known_ips
+        )
 
     @classmethod
     def _is_abnormal_login_time(
         cls,
         current_login_time: datetime,
-        average_login_hour: float
+        average_login_hour: float | None,
+        login_count: int,
     ) -> bool:
+        # Không kết luận bất thường nếu
+        # chưa có đủ baseline.
+        if (
+            average_login_hour is None
+            or login_count < 3
+        ):
+            return False
+
         current_hour = (
             current_login_time.hour
-            + current_login_time.minute / 60
+            + current_login_time.minute
+            / 60
+            + current_login_time.second
+            / 3600
         )
 
         deviation = abs(
-            current_hour - average_login_hour
+            current_hour
+            - average_login_hour
         )
 
         circular_deviation = min(
             deviation,
-            24 - deviation
+            24 - deviation,
         )
 
-        return circular_deviation > cls.MAX_LOGIN_TIME_DEVIATION
+        return (
+            circular_deviation
+            > cls.MAX_LOGIN_TIME_DEVIATION
+        )
 
     @staticmethod
-    def get_risk_level(score: int) -> str:
-        if score <= 20:
+    def get_risk_level(
+        score: int,
+    ) -> str:
+        if score < 30:
             return "LOW"
 
-        if score <= 40:
+        if score < 60:
             return "MEDIUM"
 
-        if score <= 60:
+        if score < 80:
             return "HIGH"
 
         return "CRITICAL"
