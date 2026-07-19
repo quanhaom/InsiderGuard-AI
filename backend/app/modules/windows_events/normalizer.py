@@ -85,12 +85,14 @@ class WindowsNormalizer:
             4672: (
                 "SPECIAL_PRIVILEGES_ASSIGNED"
             ),
+            4688: "PROCESS_CREATED",
         }
 
         severity_map = {
             4624: "LOW",
             4625: "MEDIUM",
             4672: "HIGH",
+            4688: "MEDIUM",
         }
 
         normalized_event = (

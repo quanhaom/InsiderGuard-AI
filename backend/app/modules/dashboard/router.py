@@ -10,6 +10,9 @@ from app.db.dependencies import get_db
 from app.modules.dashboard.service import (
     DashboardService,
 )
+from app.modules.dashboard.mitre_service import (
+    MitreDashboardService,
+)
 
 
 
@@ -18,7 +21,16 @@ router = APIRouter(
     tags=["Dashboard"]
 )
 
-
+@router.get("/mitre")
+def mitre_dashboard(
+    db: Session = Depends(get_db)
+):
+    return (
+        MitreDashboardService
+        .get_coverage(
+            db=db
+        )
+    )
 
 @router.get(
     "/overview"

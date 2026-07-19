@@ -9,7 +9,13 @@ from app.modules.ueba.privilege_detector import (
 from app.models.raw_windows_event import (
     RawWindowsEvent,
 )
+from app.modules.parsers.parser_4688 import (
+    Parser4688,
+)
 
+from app.modules.ueba.process_detector import (
+    SuspiciousProcessDetector,
+)
 from app.modules.parsers.parser_4624 import (
     Parser4624,
 )
@@ -46,7 +52,8 @@ class WindowsEventService:
         4625: Parser4625(),
 
         4672: Parser4672(),
-
+        
+        4688: Parser4688(),
     }
 
 
@@ -134,61 +141,61 @@ class WindowsEventService:
         # FAILED LOGIN
         # =========================
 
-            if event.event_id == 4625:
+        if event.event_id == 4625:
 
 
-                from app.modules.failed_login_events.service import (
-                    FailedLoginEventService,
-                )
-
-
-
-                failed_event = (
-                    FailedLoginEventService.create(
-                        db=db,
-                        payload=parsed,
-                    )
-                )
+            from app.modules.failed_login_events.service import (
+                FailedLoginEventService,
+            )
 
 
 
-                detection_result = (
-                    FailedLoginDetector.evaluate(
-                        db=db,
-                        event=failed_event,
-                    )
-                )
-
-
-
-                BehaviorProfileService.build_profile(
+            failed_event = (
+                FailedLoginEventService.create(
                     db=db,
-                    username=parsed.username,
+                    payload=parsed,
                 )
+            )
 
 
 
-                return {
-
-                    "normalized_event_id":
-                        normalized_event.id,
-
-
-                    "failed_login_event_id":
-                        failed_event.id,
+            detection_result = (
+                FailedLoginDetector.evaluate(
+                    db=db,
+                    event=failed_event,
+                )
+            )
 
 
-                    "detection":
-                        detection_result,
 
-                }
-            
+            BehaviorProfileService.build_profile(
+                db=db,
+                username=parsed.username,
+            )
 
-            # =========================
 
-            # EVENT 4672
-            # SPECIAL PRIVILEGES ASSIGNED
-            # =========================
+
+            return {
+
+                "normalized_event_id":
+                    normalized_event.id,
+
+
+                "failed_login_event_id":
+                    failed_event.id,
+
+
+                "detection":
+                    detection_result,
+
+            }
+        
+
+        # =========================
+
+        # EVENT 4672
+        # SPECIAL PRIVILEGES ASSIGNED
+        # =========================
         if event.event_id == 4672:
 
             detection = (
@@ -206,4 +213,33 @@ class WindowsEventService:
                 "detection":
                     detection,
 
+            }
+        
+
+        # =========================
+        # EVENT 4688
+        # PROCESS CREATED
+        # =========================
+        # =========================
+# EVENT 4688
+# PROCESS CREATION
+# =========================
+
+        if event.event_id == 4688:
+            detection_result = (
+                SuspiciousProcessDetector
+                .evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            return {
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+
+                "detection": (
+                    detection_result
+                ),
             }

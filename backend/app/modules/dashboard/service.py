@@ -149,3 +149,5 @@ class DashboardService:
 
             for item in rows
         ]
+    
+    

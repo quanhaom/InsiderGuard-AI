@@ -7,6 +7,9 @@ from app.modules.behavior_twin.router import (
 from app.modules.entities.router import (
     router as entities_router,
 )
+from app.modules.threat_hunting.router import (
+    router as threat_hunting_router
+)
 from app.modules.windows_events.router import (
     router as windows_event_router
 )
@@ -67,6 +70,11 @@ app.add_middleware(
 app.include_router(
     entities_router,
     prefix="/api/v1",
+)
+
+app.include_router(
+    threat_hunting_router,
+    prefix="/api/v1"
 )
 
 app.include_router(
