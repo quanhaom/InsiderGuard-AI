@@ -85,6 +85,7 @@ class WindowsNormalizer:
             4672: "SPECIAL_PRIVILEGES_ASSIGNED",
             4688: "PROCESS_CREATED",
             4720: "USER_ACCOUNT_CREATED",
+            4728: "PRIVILEGED_GROUP_MEMBERSHIP",
         }
 
         severity_map = {
@@ -93,6 +94,7 @@ class WindowsNormalizer:
             4672: "HIGH",
             4688: "MEDIUM",
             4720: "MEDIUM",
+            4728: "HIGH",
         }
 
         normalized_event = (
@@ -103,6 +105,7 @@ class WindowsNormalizer:
                     data.get("username")
                     or data.get("actor_username")
                     or data.get("target_username")
+                    or data.get("member_username")
                 ),
                 source_ip=data.get(
                     "source_ip"

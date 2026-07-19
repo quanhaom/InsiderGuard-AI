@@ -41,7 +41,13 @@ from app.modules.events.service import (
 from app.modules.behavior_profile.service import (
     BehaviorProfileService,
 )
+from app.modules.parsers.parser_4728 import (
+    Parser4728,
+)
 
+from app.modules.ueba.group_membership_detector import (
+    GroupMembershipDetector,
+)
 from app.modules.windows_events.normalizer import (
     WindowsNormalizer,
 )
@@ -62,6 +68,8 @@ class WindowsEventService:
         4688: Parser4688(),
 
         4720: Parser4720(),
+
+        4728: Parser4728(),
     }
 
 
@@ -260,6 +268,31 @@ class WindowsEventService:
         if event.event_id == 4720:
             detection_result = (
                 AccountCreationDetector
+                .evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            return {
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+
+                "detection": (
+                    detection_result
+                ),
+            }
+        
+
+        # =========================
+        # EVENT 4728
+        # PRIVILEGED GROUP MEMBERSHIP
+        # =========================
+
+        if event.event_id == 4728:
+            detection_result = (
+                GroupMembershipDetector
                 .evaluate(
                     db=db,
                     parsed=parsed,

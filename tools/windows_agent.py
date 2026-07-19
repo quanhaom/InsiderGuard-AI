@@ -422,6 +422,124 @@ def run_login_scenario() -> None:
 
         time.sleep(1)
 
+def send_group_membership_event(
+    actor_username: str,
+    member_username: str,
+    group_name: str,
+    group_domain: str,
+    source_ip: str,
+) -> None:
+    record_id = generate_record_id()
+
+    member_sid = (
+        "S-1-5-21-111111111-"
+        "222222222-333333333-1105"
+    )
+
+    group_sid = (
+        "S-1-5-21-111111111-"
+        "222222222-333333333-512"
+    )
+
+    member_distinguished_name = (
+        f"CN={member_username},"
+        f"CN=Users,"
+        f"DC=insiderguard,"
+        f"DC=local"
+    )
+
+    xml = f"""
+<Event>
+    <System>
+        <Provider
+            Name="{PROVIDER_NAME}"
+        />
+
+        <EventID>
+            4728
+        </EventID>
+
+        <EventRecordID>
+            {record_id}
+        </EventRecordID>
+
+        <Computer>
+            {COMPUTER_NAME}
+        </Computer>
+    </System>
+
+    <EventData>
+        <Data Name="SubjectUserName">
+            {actor_username}
+        </Data>
+
+        <Data Name="MemberName">
+            {member_distinguished_name}
+        </Data>
+
+        <Data Name="MemberId">
+            {member_sid}
+        </Data>
+
+        <Data Name="TargetUserName">
+            {group_name}
+        </Data>
+
+        <Data Name="TargetDomainName">
+            {group_domain}
+        </Data>
+
+        <Data Name="TargetSid">
+            {group_sid}
+        </Data>
+
+        <Data Name="IpAddress">
+            {source_ip}
+        </Data>
+    </EventData>
+</Event>
+""".strip()
+
+    payload = {
+        "record_id": record_id,
+
+        "event_id": 4728,
+
+        "computer": COMPUTER_NAME,
+
+        "provider": PROVIDER_NAME,
+
+        "source_ip": source_ip,
+
+        "xml": xml,
+    }
+
+    send_payload(
+        payload
+    )
+
+def run_group_membership_scenario() -> None:
+    print(
+        "\nRunning privileged group "
+        "membership scenario..."
+    )
+
+    send_group_membership_event(
+        actor_username="alice",
+
+        member_username="bob",
+
+        group_name="Domain Admins",
+
+        group_domain=(
+            "INSIDERGUARD"
+        ),
+
+        source_ip=(
+            "10.10.10.50"
+        ),
+    )
+
 
 def run_privilege_scenario() -> None:
     """
@@ -466,6 +584,10 @@ def main() -> None:
     time.sleep(2)
 
     run_account_creation_scenario()
+
+    time.sleep(2)
+
+    run_group_membership_scenario()
 
     print(
         "\nAll simulated Windows events "
