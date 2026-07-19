@@ -2,7 +2,13 @@ from sqlalchemy.orm import Session
 from app.modules.parsers.parser_4672 import (
     Parser4672,
 )
+from app.modules.parsers.parser_4720 import (
+    Parser4720,
+)
 
+from app.modules.ueba.account_creation_detector import (
+    AccountCreationDetector,
+)
 from app.modules.ueba.privilege_detector import (
     PrivilegeDetector,
 )
@@ -54,6 +60,8 @@ class WindowsEventService:
         4672: Parser4672(),
         
         4688: Parser4688(),
+
+        4720: Parser4720(),
     }
 
 
@@ -228,6 +236,30 @@ class WindowsEventService:
         if event.event_id == 4688:
             detection_result = (
                 SuspiciousProcessDetector
+                .evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            return {
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+
+                "detection": (
+                    detection_result
+                ),
+            }
+        
+        # =========================
+# EVENT 4720
+# USER ACCOUNT CREATED
+# =========================
+
+        if event.event_id == 4720:
+            detection_result = (
+                AccountCreationDetector
                 .evaluate(
                     db=db,
                     parsed=parsed,

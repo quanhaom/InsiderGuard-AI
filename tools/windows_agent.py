@@ -17,6 +17,103 @@ PROVIDER_NAME = (
     "Microsoft-Windows-Security-Auditing"
 )
 
+def send_account_created_event(
+    actor_username: str,
+    target_username: str,
+    target_domain: str,
+    source_ip: str,
+) -> None:
+    record_id = generate_record_id()
+
+    target_sid = (
+        "S-1-5-21-111111111-"
+        "222222222-333333333-1105"
+    )
+
+    xml = f"""
+<Event>
+    <System>
+        <Provider
+            Name="{PROVIDER_NAME}"
+        />
+
+        <EventID>
+            4720
+        </EventID>
+
+        <EventRecordID>
+            {record_id}
+        </EventRecordID>
+
+        <Computer>
+            {COMPUTER_NAME}
+        </Computer>
+    </System>
+
+    <EventData>
+        <Data Name="SubjectUserName">
+            {actor_username}
+        </Data>
+
+        <Data Name="TargetUserName">
+            {target_username}
+        </Data>
+
+        <Data Name="TargetDomainName">
+            {target_domain}
+        </Data>
+
+        <Data Name="TargetSid">
+            {target_sid}
+        </Data>
+
+        <Data Name="IpAddress">
+            {source_ip}
+        </Data>
+    </EventData>
+</Event>
+""".strip()
+
+    payload = {
+        "record_id": record_id,
+
+        "event_id": 4720,
+
+        "computer": COMPUTER_NAME,
+
+        "provider": PROVIDER_NAME,
+
+        "source_ip": source_ip,
+
+        "xml": xml,
+    }
+
+    send_payload(
+        payload
+    )
+
+def run_account_creation_scenario() -> None:
+    print(
+        "\nRunning account creation "
+        "scenario..."
+    )
+
+    send_account_created_event(
+        actor_username="alice",
+
+        target_username=(
+            "tempadmin"
+        ),
+
+        target_domain=(
+            "WORKSTATION-01"
+        ),
+
+        source_ip=(
+            "10.10.10.50"
+        ),
+    )
+
 
 def generate_record_id() -> int:
     """
@@ -365,6 +462,10 @@ def main() -> None:
     time.sleep(2)
 
     run_privilege_scenario()
+
+    time.sleep(2)
+
+    run_account_creation_scenario()
 
     print(
         "\nAll simulated Windows events "

@@ -82,10 +82,9 @@ class WindowsNormalizer:
         action_map = {
             4624: "LOGIN_SUCCESS",
             4625: "FAILED_LOGIN",
-            4672: (
-                "SPECIAL_PRIVILEGES_ASSIGNED"
-            ),
+            4672: "SPECIAL_PRIVILEGES_ASSIGNED",
             4688: "PROCESS_CREATED",
+            4720: "USER_ACCOUNT_CREATED",
         }
 
         severity_map = {
@@ -93,14 +92,17 @@ class WindowsNormalizer:
             4625: "MEDIUM",
             4672: "HIGH",
             4688: "MEDIUM",
+            4720: "MEDIUM",
         }
 
         normalized_event = (
             NormalizedWindowsEvent(
                 raw_event_id=raw_event.id,
                 event_id=raw_event.event_id,
-                username=data.get(
-                    "username"
+                username=(
+                    data.get("username")
+                    or data.get("actor_username")
+                    or data.get("target_username")
                 ),
                 source_ip=data.get(
                     "source_ip"
