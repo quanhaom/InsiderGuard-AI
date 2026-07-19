@@ -1,5 +1,11 @@
 from sqlalchemy.orm import Session
+from app.modules.parsers.parser_4672 import (
+    Parser4672,
+)
 
+from app.modules.ueba.privilege_detector import (
+    PrivilegeDetector,
+)
 from app.models.raw_windows_event import (
     RawWindowsEvent,
 )
@@ -39,8 +45,9 @@ class WindowsEventService:
 
         4625: Parser4625(),
 
-    }
+        4672: Parser4672(),
 
+    }
 
 
     @classmethod
@@ -127,51 +134,76 @@ class WindowsEventService:
         # FAILED LOGIN
         # =========================
 
-        if event.event_id == 4625:
+            if event.event_id == 4625:
 
 
-            from app.modules.failed_login_events.service import (
-                FailedLoginEventService,
-            )
+                from app.modules.failed_login_events.service import (
+                    FailedLoginEventService,
+                )
 
 
 
-            failed_event = (
-                FailedLoginEventService.create(
+                failed_event = (
+                    FailedLoginEventService.create(
+                        db=db,
+                        payload=parsed,
+                    )
+                )
+
+
+
+                detection_result = (
+                    FailedLoginDetector.evaluate(
+                        db=db,
+                        event=failed_event,
+                    )
+                )
+
+
+
+                BehaviorProfileService.build_profile(
                     db=db,
-                    payload=parsed,
+                    username=parsed.username,
+                )
+
+
+
+                return {
+
+                    "normalized_event_id":
+                        normalized_event.id,
+
+
+                    "failed_login_event_id":
+                        failed_event.id,
+
+
+                    "detection":
+                        detection_result,
+
+                }
+            
+
+            # =========================
+
+            # EVENT 4672
+            # SPECIAL PRIVILEGES ASSIGNED
+            # =========================
+        if event.event_id == 4672:
+
+            detection = (
+                PrivilegeDetector.evaluate(
+                    db=db,
+                    parsed=parsed,
                 )
             )
-
-
-
-            detection_result = (
-                FailedLoginDetector.evaluate(
-                    db=db,
-                    event=failed_event,
-                )
-            )
-
-
-
-            BehaviorProfileService.build_profile(
-                db=db,
-                username=parsed.username,
-            )
-
-
 
             return {
 
                 "normalized_event_id":
                     normalized_event.id,
 
-
-                "failed_login_event_id":
-                    failed_event.id,
-
-
                 "detection":
-                    detection_result,
+                    detection,
 
             }
