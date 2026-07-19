@@ -1,59 +1,98 @@
 # InsiderGuard AI
 
-> **Enterprise Insider Threat Detection Platform powered by AI, UEBA, Digital Behavior Twin, and Blockchain Evidence Integrity.**
+> **AI-Powered Insider Threat Detection & Security Operations Platform**
+>
+> UEBA • Windows Event Analytics • MITRE ATT&CK • Threat Hunting • Digital Forensics • Blockchain Evidence Integrity
 
 ![Python](https://img.shields.io/badge/Python-3.12+-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-ORM-red)
+![React](https://img.shields.io/badge/React-Frontend-61DAFB)
+![MITRE ATT\&CK](https://img.shields.io/badge/MITRE-ATT%26CK-red)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
 
-## Overview
+# Overview
 
-**InsiderGuard AI** is an enterprise-style cybersecurity platform designed to detect and investigate insider threats through behavioral analytics, User & Entity Behavior Analytics (UEBA), digital behavior profiling, blockchain-based evidence integrity, and AI-assisted investigations.
+**InsiderGuard AI** is a modern cybersecurity platform designed to detect, investigate, and respond to insider threats through behavioral analytics, Windows event monitoring, UEBA (User & Entity Behavior Analytics), MITRE ATT&CK mapping, and blockchain-based evidence integrity.
 
-Unlike traditional login monitoring systems, InsiderGuard AI analyzes user behavior over time, calculates dynamic risk scores, automatically creates security incidents, preserves forensic evidence, and ensures evidence integrity through a tamper-evident blockchain audit chain.
+The platform combines:
 
-The project is built as a modular, production-oriented backend using **FastAPI**, **PostgreSQL**, **SQLAlchemy**, and **Alembic**.
+* Behavioral baselining
+* Risk scoring
+* Threat detection
+* Incident management
+* Digital forensics
+* Security operations monitoring
+
+Unlike traditional login monitoring systems, InsiderGuard AI continuously analyzes user behavior and Windows security events to identify suspicious activities such as:
+
+* Brute-force attacks
+* Privilege escalation
+* Suspicious PowerShell execution
+* Living-off-the-Land (LOLBins) abuse
+* Abnormal login behavior
 
 ---
 
-# Features
+# Key Capabilities
 
-## User & Event Management
+## Windows Event Collection
 
-* User management
-* Login event ingestion
-* Event history
-* PostgreSQL persistence
+InsiderGuard collects and processes Windows Security Events.
+
+Currently supported:
+
+| Event ID | Description                 |
+| -------- | --------------------------- |
+| 4624     | Successful Login            |
+| 4625     | Failed Login                |
+| 4672     | Special Privileges Assigned |
+| 4688     | Process Creation            |
+
+Pipeline:
+
+```text
+Raw Windows Event
+        ↓
+Parser
+        ↓
+Normalization
+        ↓
+Detection Engine
+        ↓
+Alert
+        ↓
+Incident
+        ↓
+Evidence
+        ↓
+Blockchain
+```
 
 ---
 
-## Digital Behavior Twin
+## User & Entity Behavior Analytics (UEBA)
 
-Builds a behavioral profile for each employee, including:
+Builds behavioral profiles for users and devices.
+
+Behavioral features:
 
 * Average login time
-* Common source IP
 * Login frequency
+* Common source IPs
+* Login history
 * Behavioral baseline
 
----
+Risk scoring includes:
 
-## UEBA Risk Engine
+* Night logins
+* Weekend logins
+* New source IPs
+* Abnormal login times
 
-Calculates user risk scores using behavioral rules.
-
-Current rules include:
-
-* Night login
-* Weekend login
-* New IP address
-* Abnormal login time
-
-Risk Levels
+Risk Levels:
 
 | Score  | Level    |
 | ------ | -------- |
@@ -64,78 +103,207 @@ Risk Levels
 
 ---
 
-## Incident Engine
+## Threat Detection Engine
 
-Automatically creates security incidents when abnormal behavior is detected.
+### Brute Force Detection
 
-Features
+Windows Event 4625
 
-* Automatic incident generation
-* Incident history
-* Incident status management
-* Investigation workflow
+Detects:
+
+* Consecutive failed logins
+* Password spraying attempts
+* Login bursts
 
 ---
 
-## Evidence Vault
+### Privilege Escalation Detection
 
-Stores immutable forensic snapshots for every incident.
+Windows Event 4672
+
+Detects assignment of dangerous privileges:
+
+* SeDebugPrivilege
+* SeImpersonatePrivilege
+* SeTakeOwnershipPrivilege
+* SeLoadDriverPrivilege
+* SeTcbPrivilege
+
+---
+
+### Suspicious Process Detection
+
+Windows Event 4688
+
+Monitors execution of high-risk binaries:
+
+* powershell.exe
+* cmd.exe
+* rundll32.exe
+* regsvr32.exe
+* mshta.exe
+* certutil.exe
+* wmic.exe
+* psexec.exe
+* mimikatz.exe
+
+Detects suspicious command-line arguments such as:
+
+* EncodedCommand
+* Base64 payloads
+* Hidden PowerShell
+* Invoke-Expression
+* DownloadString
+* LOLBin abuse
+
+---
+
+# MITRE ATT&CK Mapping
+
+InsiderGuard automatically maps detections to MITRE ATT&CK techniques.
+
+Examples:
+
+| Process        | Technique |
+| -------------- | --------- |
+| powershell.exe | T1059.001 |
+| cmd.exe        | T1059.003 |
+| rundll32.exe   | T1218.011 |
+| regsvr32.exe   | T1218.010 |
+| mshta.exe      | T1218.005 |
+| certutil.exe   | T1105     |
+| wmic.exe       | T1047     |
+| psexec.exe     | T1021.002 |
+| mimikatz.exe   | T1003     |
+
+---
+
+# Incident Management
+
+Automatically creates incidents for high-risk detections.
+
+Features:
+
+* Incident lifecycle
+* Status management
+* Analyst workflow
+* Investigation support
+* Timeline tracking
+
+Incident statuses:
+
+* OPEN
+* INVESTIGATING
+* RESOLVED
+* CLOSED
+
+---
+
+# Incident Timeline
+
+Every security event is tracked through a complete audit trail.
+
+Examples:
+
+* Incident Created
+* Status Changed
+* Evidence Captured
+* Blockchain Sealed
+* Suspicious Process Detected
+* Privilege Escalation Detected
+
+---
+
+# Evidence Vault
+
+Stores forensic snapshots for every incident.
 
 Evidence contains:
 
-* Incident details
-* Behavior profile
-* Risk assessment
-* Triggered rules
-* SHA-256 integrity hash
+* Alert information
+* Detection results
+* Risk score
+* User behavior profile
+* Investigation context
+
+Integrity protection:
+
+* SHA-256 hashing
+* Immutable evidence records
 
 ---
 
-## Blockchain Audit Chain
+# Blockchain Audit Chain
 
-Every evidence snapshot is recorded into a private blockchain-like audit chain.
+Every evidence snapshot is recorded into a blockchain-style audit chain.
 
-Each block stores:
+Each block contains:
 
 * Evidence ID
-* Evidence SHA-256
-* Previous Block Hash
-* Current Block Hash
+* Evidence Hash
+* Previous Hash
+* Block Hash
 * Timestamp
 
-Supports integrity verification for the complete chain.
+Supports full chain verification.
+
+---
+
+# Threat Hunting
+
+Provides security analysts with a searchable view of normalized security events.
+
+Capabilities:
+
+* Event investigation
+* User activity review
+* Process hunting
+* Privilege activity review
+* Timeline analysis
 
 ---
 
 # Current Architecture
 
-```
-Login Event
-      │
-      ▼
-Behavior Twin
-      │
-      ▼
-UEBA Risk Engine
-      │
-      ▼
-Risk Assessment
-      │
-      ▼
+```text
+Windows Security Events
+          │
+          ▼
+Raw Event Collector
+          │
+          ▼
+Event Normalization
+          │
+          ▼
+Detection Engine
+          │
+          ▼
+MITRE ATT&CK Mapping
+          │
+          ▼
+Alert Engine
+          │
+          ▼
 Incident Engine
-      │
-      ▼
+          │
+          ▼
 Evidence Vault
-      │
-      ▼
-Blockchain Audit Chain
+          │
+          ▼
+Blockchain Integrity Layer
+          │
+          ▼
+Threat Hunting
+          │
+          ▼
+SOC Dashboard
 ```
 
 ---
 
 # Project Structure
 
-```
+```text
 backend/
 │
 ├── app
@@ -149,16 +317,21 @@ backend/
 │   └── modules
 │       ├── users
 │       ├── events
-│       ├── behavior_twin
+│       ├── windows_events
+│       ├── parsers
+│       ├── behavior_profile
 │       ├── ueba
 │       ├── incidents
 │       ├── evidence
 │       ├── blockchain
+│       ├── dashboard
+│       ├── threat_hunting
 │       └── investigator
 │
 ├── alembic
+├── scripts
 ├── tests
-└── scripts
+└── tools
 ```
 
 ---
@@ -169,67 +342,61 @@ Backend
 
 * FastAPI
 * SQLAlchemy
-* Pydantic
 * Alembic
+* Pydantic
 
 Database
 
 * PostgreSQL
 
+Frontend
+
+* React
+* Vite
+* Recharts
+
 Security
 
-* SHA-256
-* Blockchain Audit Chain
 * UEBA
-* Digital Behavior Twin
+* MITRE ATT&CK
+* SHA-256
+* Blockchain Evidence Chain
 
 Development
 
 * Git
-* Docker (planned)
-* Pytest (planned)
+* Docker (Planned)
+* Pytest (Planned)
 
 ---
 
-# API Modules
+# API Documentation
 
-Current REST APIs
+Swagger UI:
 
-* Users
-* Login Events
-* Behavior Twin
-* UEBA
-* Risk Assessment
-* Incidents
-* Evidence
-* Blockchain
-
-Swagger
-
-```
+```text
 http://localhost:8000/docs
 ```
 
 ---
 
-# Database
+# Current Database Schema
 
-Current schema
-
-```
+```text
 users
-
 login_events
-
+failed_login_events
 behavior_profiles
-
 risk_assessments
-
+alerts
 incidents
-
+incident_events
 evidences
-
 blockchain_blocks
+raw_windows_events
+normalized_windows_events
+devices
+investigation_reports
 ```
 
 ---
@@ -239,84 +406,54 @@ blockchain_blocks
 ## Completed
 
 * FastAPI Backend
-* PostgreSQL
-* SQLAlchemy
-* Alembic Migration
-* Behavior Twin
-* UEBA
-* Risk Assessment
+* PostgreSQL Integration
+* Alembic Migrations
+* UEBA Engine
+* Behavior Profiling
+* Alert Engine
 * Incident Engine
 * Evidence Vault
 * Blockchain Audit Chain
+* Windows Event Ingestion
+* Event Normalization
+* Threat Hunting API
+* MITRE ATT&CK Mapping
+* Incident Timeline
 
 ---
 
 ## In Progress
 
+* SOC Dashboard V2
+* MITRE Coverage Dashboard
 * AI Investigator
 
 ---
 
 ## Planned
 
-* MITRE ATT&CK Mapping
-* Windows Event Collector
-* Sysmon Collector
+* Sysmon Integration
+* Event ID 4720 Detection
+* Event ID 4728 Detection
 * USB Monitoring
 * File Activity Monitoring
 * Isolation Forest Detection
 * AutoEncoder Detection
-* SOC Dashboard
-* Docker Deployment
 * Redis
 * RabbitMQ
 * CI/CD Pipeline
+* Docker Deployment
 * Kubernetes
-
----
-
-# Future Architecture
-
-```
-Windows Collector
-        │
-        ▼
-Event Collector API
-        │
-        ▼
-Behavior Twin
-        │
-        ▼
-UEBA
-        │
-        ▼
-Risk Assessment
-        │
-        ▼
-Incident
-        │
-        ▼
-Evidence Vault
-        │
-        ▼
-Blockchain
-        │
-        ▼
-AI Investigation
-        │
-        ▼
-SOC Dashboard
-```
 
 ---
 
 # Current Status
 
-This project is under active development.
+Estimated completion:
 
-Current completion estimate:
+**≈ 80%**
 
-**≈ 65%**
+The platform already supports a complete security event → alert → incident → evidence → blockchain workflow and is evolving toward a full SOC and insider threat detection platform.
 
 ---
 
@@ -326,10 +463,11 @@ Current completion estimate:
 
 Cybersecurity Student
 
-Interested in
+Interests:
 
 * Digital Forensics
 * SOC Engineering
+* Threat Hunting
 * Insider Threat Detection
 * AI Security
 * Backend Development
@@ -338,4 +476,4 @@ Interested in
 
 # License
 
-This project is released under the MIT License.
+Released under the MIT License.
