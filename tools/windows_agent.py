@@ -4,7 +4,9 @@ import time
 import uuid
 
 import requests
-
+SYSMON_PROVIDER = (
+    "Microsoft-Windows-Sysmon"
+)
 
 API_URL = (
     "http://127.0.0.1:8000"
@@ -90,6 +92,148 @@ def send_account_created_event(
 
     send_payload(
         payload
+    )
+
+
+def send_sysmon_process_event(
+    username: str,
+    image: str,
+    command_line: str,
+    parent_image: str,
+) -> None:
+    record_id = generate_record_id()
+
+    xml = f"""
+<Event>
+    <System>
+        <Provider
+            Name="{SYSMON_PROVIDER}"
+        />
+
+        <EventID>
+            1
+        </EventID>
+
+        <EventRecordID>
+            {record_id}
+        </EventRecordID>
+
+        <Computer>
+            {COMPUTER_NAME}
+        </Computer>
+    </System>
+
+    <EventData>
+        <Data Name="UtcTime">
+            2026-07-19 08:00:00.000
+        </Data>
+
+        <Data Name="ProcessGuid">
+            {{11111111-2222-3333-4444-555555555555}}
+        </Data>
+
+        <Data Name="ProcessId">
+            4820
+        </Data>
+
+        <Data Name="Image">
+            {image}
+        </Data>
+
+        <Data Name="CommandLine">
+            {command_line}
+        </Data>
+
+        <Data Name="CurrentDirectory">
+            C:\\Users\\alice\\Downloads
+        </Data>
+
+        <Data Name="User">
+            {username}
+        </Data>
+
+        <Data Name="LogonGuid">
+            {{AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE}}
+        </Data>
+
+        <Data Name="LogonId">
+            0x12345
+        </Data>
+
+        <Data Name="TerminalSessionId">
+            1
+        </Data>
+
+        <Data Name="IntegrityLevel">
+            High
+        </Data>
+
+        <Data Name="Hashes">
+            SHA256=ABCDEF1234567890,MD5=1234567890ABCDEF
+        </Data>
+
+        <Data Name="ParentProcessGuid">
+            {{99999999-8888-7777-6666-555555555555}}
+        </Data>
+
+        <Data Name="ParentProcessId">
+            2200
+        </Data>
+
+        <Data Name="ParentImage">
+            {parent_image}
+        </Data>
+
+        <Data Name="ParentCommandLine">
+            WINWORD.EXE document.docm
+        </Data>
+    </EventData>
+</Event>
+""".strip()
+
+    payload = {
+        "record_id": record_id,
+        "event_id": 1,
+        "computer": COMPUTER_NAME,
+        "provider": SYSMON_PROVIDER,
+        "source_ip": None,
+        "xml": xml,
+    }
+
+    send_payload(payload)
+
+
+
+def run_sysmon_scenario() -> None:
+    print(
+        "\nRunning Sysmon Event 1 scenario..."
+    )
+
+    send_sysmon_process_event(
+        username=(
+            "INSIDERGUARD\\alice"
+        ),
+
+        image=(
+            r"C:\Windows\System32"
+            r"\WindowsPowerShell\v1.0"
+            r"\powershell.exe"
+        ),
+
+        command_line=(
+            "powershell.exe "
+            "-NoProfile "
+            "-ExecutionPolicy Bypass "
+            "-WindowStyle Hidden "
+            "-EncodedCommand SQBFAFgA"
+        ),
+
+        parent_image=(
+            r"C:\Program Files"
+            r"\Microsoft Office"
+            r"\root\Office16"
+            r"\WINWORD.EXE"
+        ),
     )
 
 def run_account_creation_scenario() -> None:
@@ -588,6 +732,10 @@ def main() -> None:
     time.sleep(2)
 
     run_group_membership_scenario()
+
+    time.sleep(2)
+
+    run_sysmon_scenario()
 
     print(
         "\nAll simulated Windows events "

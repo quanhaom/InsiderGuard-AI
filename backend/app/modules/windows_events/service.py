@@ -45,6 +45,13 @@ from app.modules.parsers.parser_4728 import (
     Parser4728,
 )
 
+from app.modules.parsers.sysmon_parser_1 import (
+    SysmonParser1,
+)
+
+from app.modules.ueba.sysmon_process_detector import (
+    SysmonProcessDetector,
+)
 from app.modules.ueba.group_membership_detector import (
     GroupMembershipDetector,
 )
@@ -58,18 +65,40 @@ class WindowsEventService:
 
 
     PARSERS = {
+        (
+            "microsoft-windows-security-auditing",
+            4624,
+        ): Parser4624(),
 
-        4624: Parser4624(),
+        (
+            "microsoft-windows-security-auditing",
+            4625,
+        ): Parser4625(),
 
-        4625: Parser4625(),
+        (
+            "microsoft-windows-security-auditing",
+            4672,
+        ): Parser4672(),
 
-        4672: Parser4672(),
-        
-        4688: Parser4688(),
+        (
+            "microsoft-windows-security-auditing",
+            4688,
+        ): Parser4688(),
 
-        4720: Parser4720(),
+        (
+            "microsoft-windows-security-auditing",
+            4720,
+        ): Parser4720(),
 
-        4728: Parser4728(),
+        (
+            "microsoft-windows-security-auditing",
+            4728,
+        ): Parser4728(),
+
+        (
+            "microsoft-windows-sysmon",
+            1,
+        ): SysmonParser1(),
     }
 
 
@@ -80,9 +109,16 @@ class WindowsEventService:
         event: RawWindowsEvent
     ):
 
+        provider_key = (
+            event.provider
+            or ""
+        ).strip().lower()
 
         parser = cls.PARSERS.get(
-            event.event_id
+            (
+                provider_key,
+                event.event_id,
+            )
         )
 
 
