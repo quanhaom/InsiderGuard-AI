@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -12,6 +13,34 @@ import {
 import api from "../api/client";
 
 import "../styles/investigation.css";
+
+
+function parseJsonArray(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
+    } catch (error) {
+      console.error(
+        "Could not parse JSON array:",
+        error
+      );
+
+      return value.trim()
+        ? [value]
+        : [];
+    }
+  }
+
+  return [];
+}
 
 
 function Investigation() {
@@ -42,26 +71,30 @@ function Investigation() {
           `/investigator/incident/${id}`
         );
 
-        setReport(response.data);
-        setError("");
-      } catch (requestError) {
-        console.error(requestError);
+        console.log(
+          "Loaded investigation report:",
+          response.data
+        );
 
+        setReport(response.data);
+      } catch (requestError) {
         if (
           requestError.response?.status
           === 404
         ) {
           setReport(null);
-
-          setError(
-            "Investigation report not found"
-          );
-        } else {
-          setError(
-            requestError.response?.data?.detail
-            || "Could not load investigation report"
-          );
+          return;
         }
+
+        console.error(
+          "Could not load report:",
+          requestError
+        );
+
+        setError(
+          requestError.response?.data?.detail
+          || "Could not load investigation report."
+        );
       } finally {
         setLoading(false);
       }
@@ -75,22 +108,77 @@ function Investigation() {
   }, [loadReport]);
 
 
+  const recommendations = useMemo(
+    () => parseJsonArray(
+      report?.recommendations
+    ),
+    [report]
+  );
+
+
+  const mitreTechniques = useMemo(
+    () => parseJsonArray(
+      report?.mitre_techniques
+    ),
+    [report]
+  );
+
+
   async function generateReport() {
     try {
       setGenerating(true);
       setError("");
 
-      await api.post(
+      const response = await api.post(
         `/investigator/incident/${id}/generate`
       );
 
-      await loadReport();
+      console.log(
+        "Generated investigation report:",
+        response.data
+      );
+
+      setReport(response.data);
     } catch (requestError) {
-      console.error(requestError);
+      console.error(
+        "Could not generate report:",
+        requestError
+      );
 
       setError(
         requestError.response?.data?.detail
-        || "Could not generate report"
+        || "Could not generate report."
+      );
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+
+  async function regenerateReport() {
+    try {
+      setGenerating(true);
+      setError("");
+
+      const response = await api.post(
+        `/investigator/incident/${id}/regenerate`
+      );
+
+      console.log(
+        "Regenerated investigation report:",
+        response.data
+      );
+
+      setReport(response.data);
+    } catch (requestError) {
+      console.error(
+        "Could not regenerate report:",
+        requestError
+      );
+
+      setError(
+        requestError.response?.data?.detail
+        || "Could not regenerate report."
       );
     } finally {
       setGenerating(false);
@@ -124,6 +212,69 @@ function Investigation() {
   }
 
 
+  function renderMitreTechnique(
+    item,
+    index
+  ) {
+    if (
+      typeof item === "string"
+    ) {
+      return (
+        <article
+          className="mitre-technique-card"
+          key={`${item}-${index}`}
+        >
+          <strong>
+            {item}
+          </strong>
+        </article>
+      );
+    }
+
+    if (
+      !item
+      || typeof item !== "object"
+    ) {
+      return null;
+    }
+
+    const techniqueId =
+      item.technique_id
+      || item.id
+      || "UNKNOWN";
+
+    const techniqueName =
+      item.technique_name
+      || item.name
+      || "Unknown technique";
+
+    const tactic =
+      item.tactic
+      || "Unknown tactic";
+
+    return (
+      <article
+        className="mitre-technique-card"
+        key={`${techniqueId}-${index}`}
+      >
+        <div className="mitre-technique-header">
+          <strong>
+            {techniqueId}
+          </strong>
+
+          <span>
+            {tactic}
+          </span>
+        </div>
+
+        <p>
+          {techniqueName}
+        </p>
+      </article>
+    );
+  }
+
+
   if (loading) {
     return (
       <div className="screen-message">
@@ -136,7 +287,6 @@ function Investigation() {
   if (!report) {
     return (
       <div className="screen-message">
-
         <div className="investigation-empty-state">
 
           <h2>
@@ -175,7 +325,6 @@ function Investigation() {
           </div>
 
         </div>
-
       </div>
     );
   }
@@ -204,7 +353,9 @@ function Investigation() {
         <div className="investigation-header-actions">
 
           <div className="confidence">
-            <span>Confidence</span>
+            <span>
+              Confidence
+            </span>
 
             <strong>
               {formatConfidence(
@@ -216,7 +367,7 @@ function Investigation() {
           <button
             type="button"
             disabled={generating}
-            onClick={generateReport}
+            onClick={regenerateReport}
           >
             {generating
               ? "Regenerating..."
@@ -251,7 +402,9 @@ function Investigation() {
         <header className="report-document-header">
 
           <div>
-            <span>Incident</span>
+            <span>
+              Incident
+            </span>
 
             <strong>
               #{report.incident_id}
@@ -259,7 +412,9 @@ function Investigation() {
           </div>
 
           <div>
-            <span>Model</span>
+            <span>
+              Model
+            </span>
 
             <strong>
               {report.model_name
@@ -268,7 +423,9 @@ function Investigation() {
           </div>
 
           <div>
-            <span>Generated</span>
+            <span>
+              Generated
+            </span>
 
             <strong>
               {report.created_at
@@ -280,7 +437,9 @@ function Investigation() {
           </div>
 
           <div>
-            <span>Confidence</span>
+            <span>
+              Confidence
+            </span>
 
             <strong>
               {formatConfidence(
@@ -326,18 +485,11 @@ function Investigation() {
             3. MITRE ATT&amp;CK Mapping
           </h2>
 
-          {report.mitre_techniques
-          && report.mitre_techniques.length > 0 ? (
-            <div className="report-text-list">
-
-              {report.mitre_techniques.map(
-                (item, index) => (
-                  <p key={`${item}-${index}`}>
-                    {index + 1}. {item}
-                  </p>
-                )
+          {mitreTechniques.length > 0 ? (
+            <div className="mitre-technique-grid">
+              {mitreTechniques.map(
+                renderMitreTechnique
               )}
-
             </div>
           ) : (
             <p>
@@ -355,19 +507,22 @@ function Investigation() {
             4. Recommended Actions
           </h2>
 
-          {report.recommendations
-          && report.recommendations.length > 0 ? (
-            <div className="report-text-list">
+          {recommendations.length > 0 ? (
+            <ol className="report-action-list">
 
-              {report.recommendations.map(
+              {recommendations.map(
                 (item, index) => (
-                  <p key={`${item}-${index}`}>
-                    {index + 1}. {item}
-                  </p>
+                  <li
+                    key={`recommendation-${index}`}
+                  >
+                    {typeof item === "string"
+                      ? item
+                      : JSON.stringify(item)}
+                  </li>
                 )
               )}
 
-            </div>
+            </ol>
           ) : (
             <p>
               No recommendations were generated.
@@ -387,9 +542,9 @@ function Investigation() {
             This report was generated to assist
             security analysts during incident
             triage and investigation. The findings
-            should be validated against the related
+            should be validated against related
             Windows events, evidence records,
-            affected user profile and device
+            affected user profiles and device
             activity before remediation actions
             are completed.
           </p>
