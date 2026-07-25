@@ -7,6 +7,9 @@ from app.modules.behavior_twin.router import (
 from app.modules.entities.router import (
     router as entities_router,
 )
+from app.modules.windows_events.pipeline_registry import (
+    register_windows_pipeline,
+)
 from app.modules.threat_hunting.router import (
     router as threat_hunting_router
 )
@@ -44,6 +47,7 @@ from app.modules.case_explorer.router import (
 from app.modules.behavior_profile.router import (
     router as behavior_profile_router,
 )
+register_windows_pipeline()
 app = FastAPI(
     title="InsiderGuard AI",
     version="1.0.0"

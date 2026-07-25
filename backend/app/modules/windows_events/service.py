@@ -1,37 +1,15 @@
 from sqlalchemy.orm import Session
-from app.modules.parsers.parser_4672 import (
-    Parser4672,
-)
-from app.modules.parsers.parser_4720 import (
-    Parser4720,
-)
 
-from app.modules.ueba.account_creation_detector import (
-    AccountCreationDetector,
-)
-from app.modules.ueba.privilege_detector import (
-    PrivilegeDetector,
-)
 from app.models.raw_windows_event import (
     RawWindowsEvent,
 )
-from app.modules.parsers.parser_4688 import (
-    Parser4688,
+
+from app.modules.windows_events.pipeline_executor import (
+    WindowsPipelineExecutor,
 )
 
-from app.modules.ueba.process_detector import (
-    SuspiciousProcessDetector,
-)
-from app.modules.parsers.parser_4624 import (
-    Parser4624,
-)
-
-from app.modules.parsers.parser_4625 import (
-    Parser4625,
-)
-
-from app.modules.ueba.failed_login_detector import (
-    FailedLoginDetector,
+from app.modules.windows_events.normalizer import (
+    WindowsNormalizer,
 )
 
 from app.modules.events.service import (
@@ -41,72 +19,48 @@ from app.modules.events.service import (
 from app.modules.behavior_profile.service import (
     BehaviorProfileService,
 )
-from app.modules.parsers.parser_4728 import (
-    Parser4728,
+
+from app.modules.ueba.failed_login_detector import (
+    FailedLoginDetector,
 )
 
-from app.modules.parsers.sysmon_parser_1 import (
-    SysmonParser1,
+from app.modules.ueba.privilege_detector import (
+    PrivilegeDetector,
+)
+
+from app.modules.ueba.process_detector import (
+    SuspiciousProcessDetector,
+)
+
+from app.modules.ueba.account_creation_detector import (
+    AccountCreationDetector,
+)
+
+from app.modules.ueba.group_membership_detector import (
+    GroupMembershipDetector,
 )
 
 from app.modules.ueba.sysmon_process_detector import (
     SysmonProcessDetector,
 )
-from app.modules.ueba.group_membership_detector import (
-    GroupMembershipDetector,
-)
-from app.modules.windows_events.normalizer import (
-    WindowsNormalizer,
+
+
+SECURITY_PROVIDER = (
+    "microsoft-windows-security-auditing"
 )
 
+SYSMON_PROVIDER = (
+    "microsoft-windows-sysmon"
+)
 
 
 class WindowsEventService:
-
-
-    PARSERS = {
-        (
-            "microsoft-windows-security-auditing",
-            4624,
-        ): Parser4624(),
-
-        (
-            "microsoft-windows-security-auditing",
-            4625,
-        ): Parser4625(),
-
-        (
-            "microsoft-windows-security-auditing",
-            4672,
-        ): Parser4672(),
-
-        (
-            "microsoft-windows-security-auditing",
-            4688,
-        ): Parser4688(),
-
-        (
-            "microsoft-windows-security-auditing",
-            4720,
-        ): Parser4720(),
-
-        (
-            "microsoft-windows-security-auditing",
-            4728,
-        ): Parser4728(),
-
-        (
-            "microsoft-windows-sysmon",
-            1,
-        ): SysmonParser1(),
-    }
-
 
     @classmethod
     def process_event(
         cls,
         db: Session,
-        event: RawWindowsEvent
+        event: RawWindowsEvent,
     ):
 
         provider_key = (
@@ -114,93 +68,84 @@ class WindowsEventService:
             or ""
         ).strip().lower()
 
-        parser = cls.PARSERS.get(
-            (
-                provider_key,
-                event.event_id,
+        # =========================
+        # PARSE EVENT
+        # =========================
+
+        parsed = (
+            WindowsPipelineExecutor.parse(
+                db=db,
+                event=event,
             )
         )
 
-
-        if parser is None:
-
-            return None
-
-
-
-        parsed = parser.parse(
-            db=db,
-            event=event
-        )
-
-
+        if parsed is None:
+            return {
+                "status": "stored",
+                "raw_event_id": event.id,
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "message": (
+                    "No parser registered "
+                    "for this event"
+                ),
+            }
 
         # =========================
-        # NORMALIZE WINDOWS EVENT
+        # NORMALIZE EVENT
         # =========================
 
         normalized_event = (
             WindowsNormalizer.save(
                 db=db,
                 raw_event=event,
-                parsed=parsed
+                parsed=parsed,
             )
         )
 
-
-
         # =========================
-        # EVENT 4624
-        # SUCCESS LOGIN
+        # SECURITY EVENT 4624
+        # SUCCESSFUL LOGIN
         # =========================
 
-        if event.event_id == 4624:
-
-
+        if (
+            provider_key == SECURITY_PROVIDER
+            and event.event_id == 4624
+        ):
             login_event = (
-                EventService
-                .create_login_event(
+                EventService.create_login_event(
                     db=db,
-                    payload=parsed
+                    payload=parsed,
                 )
             )
 
-
-
             BehaviorProfileService.build_profile(
                 db=db,
-                username=parsed.username
+                username=parsed.username,
             )
 
-
-
             return {
-
-                "normalized_event_id":
-                    normalized_event.id,
-
-                "login_event_id":
-                    login_event.id,
-
+                "status": "processed",
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+                "login_event_id": (
+                    login_event.id
+                ),
             }
 
-
-
-
-
         # =========================
-        # EVENT 4625
+        # SECURITY EVENT 4625
         # FAILED LOGIN
         # =========================
 
-        if event.event_id == 4625:
-
-
+        if (
+            provider_key == SECURITY_PROVIDER
+            and event.event_id == 4625
+        ):
             from app.modules.failed_login_events.service import (
                 FailedLoginEventService,
             )
-
-
 
             failed_event = (
                 FailedLoginEventService.create(
@@ -209,8 +154,6 @@ class WindowsEventService:
                 )
             )
 
-
-
             detection_result = (
                 FailedLoginDetector.evaluate(
                     db=db,
@@ -218,39 +161,34 @@ class WindowsEventService:
                 )
             )
 
-
-
             BehaviorProfileService.build_profile(
                 db=db,
                 username=parsed.username,
             )
 
-
-
             return {
-
-                "normalized_event_id":
-                    normalized_event.id,
-
-
-                "failed_login_event_id":
-                    failed_event.id,
-
-
-                "detection":
-                    detection_result,
-
+                "status": "processed",
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+                "failed_login_event_id": (
+                    failed_event.id
+                ),
+                "detection": (
+                    detection_result
+                ),
             }
-        
 
         # =========================
-
-        # EVENT 4672
-        # SPECIAL PRIVILEGES ASSIGNED
+        # SECURITY EVENT 4672
+        # SPECIAL PRIVILEGES
         # =========================
-        if event.event_id == 4672:
 
-            detection = (
+        if (
+            provider_key == SECURITY_PROVIDER
+            and event.event_id == 4672
+        ):
+            detection_result = (
                 PrivilegeDetector.evaluate(
                     db=db,
                     parsed=parsed,
@@ -258,89 +196,128 @@ class WindowsEventService:
             )
 
             return {
-
-                "normalized_event_id":
-                    normalized_event.id,
-
-                "detection":
-                    detection,
-
+                "status": "processed",
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+                "detection": (
+                    detection_result
+                ),
             }
-        
 
         # =========================
-        # EVENT 4688
-        # PROCESS CREATED
+        # SECURITY EVENT 4688
+        # PROCESS CREATION
         # =========================
-        # =========================
-# EVENT 4688
-# PROCESS CREATION
-# =========================
 
-        if event.event_id == 4688:
+        if (
+            provider_key == SECURITY_PROVIDER
+            and event.event_id == 4688
+        ):
             detection_result = (
-                SuspiciousProcessDetector
-                .evaluate(
+                SuspiciousProcessDetector.evaluate(
                     db=db,
                     parsed=parsed,
                 )
             )
 
             return {
+                "status": "processed",
                 "normalized_event_id": (
                     normalized_event.id
                 ),
-
                 "detection": (
                     detection_result
                 ),
             }
-        
-        # =========================
-# EVENT 4720
-# USER ACCOUNT CREATED
-# =========================
 
-        if event.event_id == 4720:
+        # =========================
+        # SECURITY EVENT 4720
+        # USER ACCOUNT CREATED
+        # =========================
+
+        if (
+            provider_key == SECURITY_PROVIDER
+            and event.event_id == 4720
+        ):
             detection_result = (
-                AccountCreationDetector
-                .evaluate(
+                AccountCreationDetector.evaluate(
                     db=db,
                     parsed=parsed,
                 )
             )
 
             return {
+                "status": "processed",
                 "normalized_event_id": (
                     normalized_event.id
                 ),
-
                 "detection": (
                     detection_result
                 ),
             }
-        
 
         # =========================
-        # EVENT 4728
-        # PRIVILEGED GROUP MEMBERSHIP
+        # SECURITY EVENT 4728
+        # GROUP MEMBERSHIP
         # =========================
 
-        if event.event_id == 4728:
+        if (
+            provider_key == SECURITY_PROVIDER
+            and event.event_id == 4728
+        ):
             detection_result = (
-                GroupMembershipDetector
-                .evaluate(
+                GroupMembershipDetector.evaluate(
                     db=db,
                     parsed=parsed,
                 )
             )
 
             return {
+                "status": "processed",
                 "normalized_event_id": (
                     normalized_event.id
                 ),
-
                 "detection": (
                     detection_result
                 ),
             }
+
+        # =========================
+        # SYSMON EVENT 1
+        # PROCESS CREATION
+        # =========================
+
+        if (
+            provider_key == SYSMON_PROVIDER
+            and event.event_id == 1
+        ):
+            detection_result = (
+                SysmonProcessDetector.evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            return {
+                "status": "processed",
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+                "detection": (
+                    detection_result
+                ),
+            }
+
+        # Event đã được parse và normalize,
+        # nhưng chưa có nghiệp vụ detector.
+
+        return {
+            "status": "normalized",
+            "normalized_event_id": (
+                normalized_event.id
+            ),
+            "event_id": event.event_id,
+            "provider": event.provider,
+            "detection": None,
+        }
