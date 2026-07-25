@@ -7,6 +7,9 @@ from app.modules.parsers.parser_4625 import (
 from app.modules.parsers.parser_4672 import (
     Parser4672,
 )
+from app.modules.parsers.sysmon_parser_3 import (
+    SysmonParser3,
+)
 from app.modules.parsers.parser_4688 import (
     Parser4688,
 )
@@ -42,6 +45,11 @@ def register_windows_pipeline() -> None:
         Parser4624(),
     )
 
+    ParserRegistry.register(
+        SYSMON_PROVIDER,
+        3,
+        SysmonParser3(),
+    )
     ParserRegistry.register(
         SECURITY_PROVIDER,
         4625,

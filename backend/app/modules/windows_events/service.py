@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy.orm import Session
 
 from app.models.raw_windows_event import (
@@ -44,6 +46,10 @@ from app.modules.ueba.sysmon_process_detector import (
     SysmonProcessDetector,
 )
 
+from app.modules.ueba.sysmon_network_detector import (
+    SysmonNetworkDetector,
+)
+
 
 SECURITY_PROVIDER = (
     "microsoft-windows-security-auditing"
@@ -61,7 +67,7 @@ class WindowsEventService:
         cls,
         db: Session,
         event: RawWindowsEvent,
-    ):
+    ) -> dict[str, Any]:
 
         provider_key = (
             event.provider
@@ -126,12 +132,15 @@ class WindowsEventService:
 
             return {
                 "status": "processed",
+                "raw_event_id": event.id,
                 "normalized_event_id": (
                     normalized_event.id
                 ),
                 "login_event_id": (
                     login_event.id
                 ),
+                "event_id": event.event_id,
+                "provider": event.provider,
             }
 
         # =========================
@@ -168,15 +177,16 @@ class WindowsEventService:
 
             return {
                 "status": "processed",
+                "raw_event_id": event.id,
                 "normalized_event_id": (
                     normalized_event.id
                 ),
                 "failed_login_event_id": (
                     failed_event.id
                 ),
-                "detection": (
-                    detection_result
-                ),
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "detection": detection_result,
             }
 
         # =========================
@@ -197,12 +207,13 @@ class WindowsEventService:
 
             return {
                 "status": "processed",
+                "raw_event_id": event.id,
                 "normalized_event_id": (
                     normalized_event.id
                 ),
-                "detection": (
-                    detection_result
-                ),
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "detection": detection_result,
             }
 
         # =========================
@@ -223,12 +234,13 @@ class WindowsEventService:
 
             return {
                 "status": "processed",
+                "raw_event_id": event.id,
                 "normalized_event_id": (
                     normalized_event.id
                 ),
-                "detection": (
-                    detection_result
-                ),
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "detection": detection_result,
             }
 
         # =========================
@@ -249,12 +261,13 @@ class WindowsEventService:
 
             return {
                 "status": "processed",
+                "raw_event_id": event.id,
                 "normalized_event_id": (
                     normalized_event.id
                 ),
-                "detection": (
-                    detection_result
-                ),
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "detection": detection_result,
             }
 
         # =========================
@@ -275,12 +288,13 @@ class WindowsEventService:
 
             return {
                 "status": "processed",
+                "raw_event_id": event.id,
                 "normalized_event_id": (
                     normalized_event.id
                 ),
-                "detection": (
-                    detection_result
-                ),
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "detection": detection_result,
             }
 
         # =========================
@@ -301,19 +315,51 @@ class WindowsEventService:
 
             return {
                 "status": "processed",
+                "raw_event_id": event.id,
                 "normalized_event_id": (
                     normalized_event.id
                 ),
-                "detection": (
-                    detection_result
-                ),
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "detection": detection_result,
             }
 
-        # Event đã được parse và normalize,
-        # nhưng chưa có nghiệp vụ detector.
+        # =========================
+        # SYSMON EVENT 3
+        # NETWORK CONNECTION
+        # =========================
+
+        if (
+            provider_key == SYSMON_PROVIDER
+            and event.event_id == 3
+        ):
+            detection_result = (
+                SysmonNetworkDetector.evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            return {
+                "status": "processed",
+                "raw_event_id": event.id,
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "detection": detection_result,
+            }
+
+        # =========================
+        # DEFAULT RESULT
+        # =========================
+        # Event đã có parser và đã được normalize,
+        # nhưng chưa có detector hoặc nghiệp vụ riêng.
 
         return {
             "status": "normalized",
+            "raw_event_id": event.id,
             "normalized_event_id": (
                 normalized_event.id
             ),
