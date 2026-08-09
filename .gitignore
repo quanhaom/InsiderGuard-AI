@@ -50,3 +50,6 @@ Thumbs.db
 # Docker
 # =========================
 docker-data/
+
+# Windows Collector runtime state
+tools/collector_state.json
