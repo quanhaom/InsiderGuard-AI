@@ -2,6 +2,9 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.modules.ueba.sysmon_file_detector import (
+    SysmonFileDetector,
+)
 from app.models.raw_windows_event import (
     RawWindowsEvent,
 )
@@ -349,6 +352,35 @@ class WindowsEventService:
                 "event_id": event.event_id,
                 "provider": event.provider,
                 "detection": detection_result,
+            }
+
+
+                # =========================
+        # SYSMON EVENT 11
+        # FILE CREATE
+        # =========================
+
+        if (
+            provider_key == SYSMON_PROVIDER
+            and event.event_id == 11
+        ):
+            detection_result = (
+                SysmonFileDetector.evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            return {
+                "status": "processed",
+
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+
+                "detection": (
+                    detection_result
+                ),
             }
 
         # =========================

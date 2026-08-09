@@ -22,6 +22,12 @@ from app.modules.parsers.parser_4728 import (
 from app.modules.parsers.sysmon_parser_1 import (
     SysmonParser1,
 )
+from app.modules.parsers.sysmon_parser_11 import (
+    SysmonParser11,
+)
+from app.modules.parsers.sysmon_parser_11 import (
+    SysmonParser3,
+)
 
 from app.modules.windows_events.parser_registry import (
     ParserRegistry,
@@ -84,4 +90,16 @@ def register_windows_pipeline() -> None:
         SYSMON_PROVIDER,
         1,
         SysmonParser1(),
+    )
+
+    ParserRegistry.register(
+        SYSMON_PROVIDER,
+        3,
+        SysmonParser3
+    )
+
+    ParserRegistry.register(
+        SYSMON_PROVIDER,
+        11,
+        SysmonParser11
     )

@@ -40,6 +40,7 @@ SECURITY_EVENT_IDS = {
 SYSMON_EVENT_IDS = {
     1,
     3,
+    11,
 }
 
 
