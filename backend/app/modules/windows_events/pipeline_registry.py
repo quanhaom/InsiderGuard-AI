@@ -25,7 +25,7 @@ from app.modules.parsers.sysmon_parser_1 import (
 from app.modules.parsers.sysmon_parser_11 import (
     SysmonParser11,
 )
-from app.modules.parsers.sysmon_parser_11 import (
+from app.modules.parsers.sysmon_parser_3 import (
     SysmonParser3,
 )
 
