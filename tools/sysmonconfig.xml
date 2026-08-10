@@ -12,5 +12,9 @@
     <!-- Event 11: File Creation -->
     <FileCreate onmatch="exclude" />
 
+    <RegistryEvent onmatch="exclude" />
+
+    <DnsQuery onmatch="exclude" />
+
   </EventFiltering>
 </Sysmon>

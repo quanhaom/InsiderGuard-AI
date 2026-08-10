@@ -29,10 +29,15 @@ from app.modules.parsers.sysmon_parser_3 import (
     SysmonParser3,
 )
 
+from app.modules.parsers.sysmon_parser_13 import (
+    SysmonParser13,
+)
 from app.modules.windows_events.parser_registry import (
     ParserRegistry,
 )
-
+from app.modules.parsers.sysmon_parser_22 import (
+    SysmonParser22
+)
 
 SECURITY_PROVIDER = (
     "microsoft-windows-security-auditing"
@@ -102,4 +107,16 @@ def register_windows_pipeline() -> None:
         SYSMON_PROVIDER,
         11,
         SysmonParser11
+    )
+
+    ParserRegistry.register(
+        SYSMON_PROVIDER,
+        13,
+        SysmonParser13
+    )
+
+    ParserRegistry.register(
+        SYSMON_PROVIDER,
+        22,
+        SysmonParser22
     )

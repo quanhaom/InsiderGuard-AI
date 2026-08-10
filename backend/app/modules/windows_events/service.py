@@ -9,6 +9,13 @@ from app.models.raw_windows_event import (
     RawWindowsEvent,
 )
 
+from app.modules.ueba.sysmon_dns_detector import (
+    SysmonDnsDetector,
+)
+
+from app.modules.ueba.sysmon_registry_detector import (
+    SysmonRegistryDetector,
+)
 from app.modules.windows_events.pipeline_executor import (
     WindowsPipelineExecutor,
 )
@@ -366,6 +373,63 @@ class WindowsEventService:
         ):
             detection_result = (
                 SysmonFileDetector.evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            return {
+                "status": "processed",
+
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+
+                "detection": (
+                    detection_result
+                ),
+            }
+
+        # =========================
+        # SYSMON EVENT 22
+        # DNS QUERY
+        # =========================
+
+        if (
+            provider_key == SYSMON_PROVIDER
+            and event.event_id == 22
+        ):
+            detection_result = (
+                SysmonDnsDetector.evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            return {
+                "status": "processed",
+
+                "normalized_event_id": (
+                    normalized_event.id
+                ),
+
+                "detection": (
+                    detection_result
+                ),
+            }
+
+
+        # =========================
+        # SYSMON EVENT 13
+        # REGISTRY VALUE SET
+        # =========================
+
+        if (
+            provider_key == SYSMON_PROVIDER
+            and event.event_id == 13
+        ):
+            detection_result = (
+                SysmonRegistryDetector.evaluate(
                     db=db,
                     parsed=parsed,
                 )
