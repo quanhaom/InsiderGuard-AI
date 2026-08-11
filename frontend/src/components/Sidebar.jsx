@@ -9,6 +9,10 @@ const navigationItems = [
     path: "/",
   },
   {
+    label: "Correlation",
+    path: "/correlation",
+  },
+  {
     label: "Incidents",
     path: "/incidents",
   },

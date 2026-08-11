@@ -3,13 +3,10 @@
 
   <EventFiltering>
 
-    <!-- Event 1: Process Creation -->
     <ProcessCreate onmatch="exclude" />
 
-    <!-- Event 3: Network Connection -->
     <NetworkConnect onmatch="exclude" />
 
-    <!-- Event 11: File Creation -->
     <FileCreate onmatch="exclude" />
 
     <RegistryEvent onmatch="exclude" />

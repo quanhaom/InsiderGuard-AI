@@ -4,6 +4,8 @@ import {
   Routes,
 } from "react-router-dom";
 
+import BehaviorCorrelation from "./pages/BehaviorCorrelation";
+
 import UserDetail from "./pages/UserDetail";
 import Users from "./pages/Users";
 import AppLayout from "./components/AppLayout";
@@ -59,6 +61,13 @@ function App() {
           <Route
             path="/events/:id"
             element={<EventDetail />}
+          />
+
+          <Route
+            path="/correlation"
+            element={
+              <BehaviorCorrelation />
+            }
           />
 
           <Route

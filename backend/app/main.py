@@ -10,6 +10,10 @@ from app.modules.entities.router import (
 from app.modules.windows_events.pipeline_registry import (
     register_windows_pipeline,
 )
+
+from app.modules.correlation.router import (
+    router as correlation_router,
+)
 from app.modules.threat_hunting.router import (
     router as threat_hunting_router
 )
