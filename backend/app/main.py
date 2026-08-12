@@ -1,12 +1,21 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.modules.ueba.router import router as ueba_router
+
+from fastapi.middleware.cors import (
+    CORSMiddleware,
+)
+
+from app.modules.ueba.router import (
+    router as ueba_router,
+)
+
 from app.modules.behavior_twin.router import (
     router as behavior_twin_router,
 )
+
 from app.modules.entities.router import (
     router as entities_router,
 )
+
 from app.modules.windows_events.pipeline_registry import (
     register_windows_pipeline,
 )
@@ -14,75 +23,114 @@ from app.modules.windows_events.pipeline_registry import (
 from app.modules.correlation.router import (
     router as correlation_router,
 )
+
 from app.modules.threat_hunting.router import (
-    router as threat_hunting_router
+    router as threat_hunting_router,
 )
+
 from app.modules.windows_events.router import (
-    router as windows_event_router
+    router as windows_event_router,
 )
+
 from app.modules.events.router import (
     router as events_router,
 )
+
 from app.modules.incidents.router import (
     router as incidents_router,
 )
+
 from app.modules.evidence.router import (
     router as evidence_router,
 )
+
 from app.modules.blockchain.router import (
     router as blockchain_router,
 )
+
 from app.modules.investigator.router import (
     router as investigator_router,
 )
+
 from app.modules.collector.router import (
     router as collector_router,
 )
+
 from app.modules.dashboard.router import (
     router as dashboard_router,
 )
-from app.api.dashboard import router as dashboard_router
+
 from app.modules.event_explorer.router import (
     router as event_explorer_router,
 )
+
 from app.modules.case_explorer.router import (
     router as case_explorer_router,
 )
+
 from app.modules.behavior_profile.router import (
     router as behavior_profile_router,
 )
+
+
+# =========================
+# REGISTER WINDOWS PIPELINE
+# =========================
+
 register_windows_pipeline()
+
+
+# =========================
+# FASTAPI APP
+# =========================
+
 app = FastAPI(
     title="InsiderGuard AI",
-    version="1.0.0"
+    version="1.0.0",
 )
+
+
+# =========================
+# CORS
+# =========================
+
 app.add_middleware(
-
     CORSMiddleware,
-
     allow_origins=[
-        "http://localhost:5173"
+        "http://localhost:5173",
     ],
-
     allow_credentials=True,
-
     allow_methods=[
-        "*"
+        "*",
     ],
-
     allow_headers=[
-        "*"
-    ]
+        "*",
+    ],
 )
+
+
+# =========================
+# CORE ENTITIES
+# =========================
 
 app.include_router(
     entities_router,
     prefix="/api/v1",
 )
 
+
+# =========================
+# WINDOWS EVENTS
+# =========================
+
 app.include_router(
-    threat_hunting_router,
-    prefix="/api/v1"
+    windows_event_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    events_router,
+    prefix="/api/v1",
 )
 
 app.include_router(
@@ -90,72 +138,120 @@ app.include_router(
     prefix="/api/v1",
 )
 
-app.include_router(
-    case_explorer_router,
-    prefix="/api/v1",
-)
-app.include_router(
-    dashboard_router,
-    prefix="/api/v1"
-)
-app.include_router(
-    dashboard_router,
-    prefix="/api/v1",
-)
-app.include_router(
-    windows_event_router,
-    prefix="/api/v1"
-)
 
-# Existing modules
-app.include_router(
-    ueba_router,
-    prefix="/api/v1"
-)
-
-app.include_router(
-    events_router,
-    prefix="/api/v1"
-)
+# =========================
+# COLLECTOR
+# =========================
 
 app.include_router(
     collector_router,
-    prefix="/api/v1"
+    prefix="/api/v1",
 )
 
-app.include_router(
-    investigator_router,
-    prefix="/api/v1"
-)
+
+# =========================
+# UEBA
+# =========================
 
 app.include_router(
-    blockchain_router,
-    prefix="/api/v1"
+    ueba_router,
+    prefix="/api/v1",
 )
 
-app.include_router(
-    behavior_twin_router,
-    prefix="/api/v1"
-)
-
-app.include_router(
-    incidents_router,
-    prefix="/api/v1"
-)
 app.include_router(
     behavior_profile_router,
     prefix="/api/v1",
 )
 
 app.include_router(
-    evidence_router,
-    prefix="/api/v1"
+    behavior_twin_router,
+    prefix="/api/v1",
 )
 
+
+# =========================
+# CORRELATION ENGINE
+# =========================
+
+app.include_router(
+    correlation_router,
+    prefix="/api/v1",
+)
+
+
+# =========================
+# THREAT HUNTING
+# =========================
+
+app.include_router(
+    threat_hunting_router,
+    prefix="/api/v1",
+)
+
+
+# =========================
+# INCIDENTS
+# =========================
+
+app.include_router(
+    incidents_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    case_explorer_router,
+    prefix="/api/v1",
+)
+
+
+# =========================
+# EVIDENCE
+# =========================
+
+app.include_router(
+    evidence_router,
+    prefix="/api/v1",
+)
+
+
+# =========================
+# BLOCKCHAIN
+# =========================
+
+app.include_router(
+    blockchain_router,
+    prefix="/api/v1",
+)
+
+
+# =========================
+# INVESTIGATOR
+# =========================
+
+app.include_router(
+    investigator_router,
+    prefix="/api/v1",
+)
+
+
+# =========================
+# DASHBOARD
+# =========================
+
+app.include_router(
+    dashboard_router,
+    prefix="/api/v1",
+)
+
+
+# =========================
+# ROOT
+# =========================
 
 @app.get("/")
 def root():
     return {
         "project": "InsiderGuard AI",
-        "status": "running"
+        "status": "running",
+        "version": "1.0.0",
     }
