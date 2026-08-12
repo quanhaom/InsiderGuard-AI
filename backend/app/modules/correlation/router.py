@@ -154,6 +154,53 @@ def get_top_correlations(
         in results[:limit]
     ]
 
+@router.post("/process")
+def process_correlations(
+    computer: str | None = Query(
+        default=None,
+    ),
+    window_minutes: int = Query(
+        default=10,
+        ge=1,
+        le=1440,
+    ),
+    db: Session = Depends(
+        get_db
+    ),
+):
+    alerts = (
+        CorrelationService
+        .process_detections(
+            db=db,
+            computer=computer,
+            window_minutes=(
+                window_minutes
+            ),
+        )
+    )
+
+    return {
+        "processed_alerts": len(
+            alerts
+        ),
+
+        "alerts": [
+            {
+                "id": alert.id,
+                "username":
+                    alert.username,
+                "alert_type":
+                    alert.alert_type,
+                "severity":
+                    alert.severity,
+                "risk_score":
+                    alert.risk_score,
+            }
+            for alert
+            in alerts
+        ],
+    }
+
 
 @router.get(
     "/process/{process_guid}"
@@ -238,3 +285,5 @@ def get_process_correlation(
         "detail":
             "Process correlation not found"
     }
+
+    

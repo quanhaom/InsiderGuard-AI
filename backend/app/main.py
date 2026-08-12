@@ -56,7 +56,7 @@ from app.modules.collector.router import (
     router as collector_router,
 )
 
-from app.modules.dashboard.router import (
+from app.api.dashboard import (
     router as dashboard_router,
 )
 

@@ -35,6 +35,10 @@ class CorrelationService:
         22,
     }
 
+    # =========================
+    # DETAILS PARSER
+    # =========================
+
     @staticmethod
     def _details_to_dict(
         details,
@@ -53,17 +57,16 @@ class CorrelationService:
             details,
             str,
         ):
-
             try:
-                result = json.loads(
+                parsed = json.loads(
                     details
                 )
 
                 if isinstance(
-                    result,
+                    parsed,
                     dict,
                 ):
-                    return result
+                    return parsed
 
             except (
                 json.JSONDecodeError,
@@ -72,6 +75,33 @@ class CorrelationService:
                 pass
 
         return {}
+
+    # =========================
+    # PID NORMALIZATION
+    # =========================
+
+    @staticmethod
+    def _normalize_pid(
+        value,
+    ) -> int | None:
+
+        if value is None:
+            return None
+
+        try:
+            return int(
+                str(value).strip()
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+            return None
+
+    # =========================
+    # EVENT SERIALIZATION
+    # =========================
 
     @classmethod
     def _serialize_event(
@@ -135,7 +165,9 @@ class CorrelationService:
                 process_guid,
 
             "process_id":
-                process_id,
+                cls._normalize_pid(
+                    process_id
+                ),
 
             "image":
                 image,
@@ -151,24 +183,9 @@ class CorrelationService:
                 ),
         }
 
-    @staticmethod
-    def _normalize_pid(
-        value,
-    ) -> int | None:
-
-        if value is None:
-            return None
-
-        try:
-            return int(
-                str(value)
-            )
-
-        except (
-            ValueError,
-            TypeError,
-        ):
-            return None
+    # =========================
+    # PROCESS KEY
+    # =========================
 
     @classmethod
     def _process_key(
@@ -186,11 +203,14 @@ class CorrelationService:
         )
 
         if process_guid:
+
             return (
                 "guid",
                 str(
                     process_guid
-                ).lower(),
+                )
+                .strip()
+                .lower(),
             )
 
         process_id = (
@@ -212,9 +232,15 @@ class CorrelationService:
             "pid",
             str(
                 computer
-            ).lower(),
+            )
+            .strip()
+            .lower(),
             process_id,
         )
+
+    # =========================
+    # RECENT EVENTS
+    # =========================
 
     @classmethod
     def get_recent_events(
@@ -291,6 +317,262 @@ class CorrelationService:
             in rows
         ]
 
+    # =========================
+    # MATCH PROCESS
+    # =========================
+
+    @classmethod
+    def _matches_process(
+        cls,
+        event: dict[
+            str,
+            Any,
+        ],
+        *,
+        computer: str | None,
+        process_guid: str | None,
+        process_id: int | None,
+    ) -> bool:
+
+        event_computer = (
+            event.get(
+                "computer"
+            )
+        )
+
+        if (
+            computer
+            and event_computer
+            and str(
+                event_computer
+            ).lower()
+            != str(
+                computer
+            ).lower()
+        ):
+            return False
+
+        event_guid = (
+            event.get(
+                "process_guid"
+            )
+        )
+
+        # ProcessGuid has highest priority.
+        if process_guid:
+
+            if not event_guid:
+                return False
+
+            return (
+                str(
+                    event_guid
+                )
+                .strip()
+                .lower()
+                ==
+                str(
+                    process_guid
+                )
+                .strip()
+                .lower()
+            )
+
+        normalized_pid = (
+            cls._normalize_pid(
+                process_id
+            )
+        )
+
+        event_pid = (
+            cls._normalize_pid(
+                event.get(
+                    "process_id"
+                )
+            )
+        )
+
+        if (
+            normalized_pid is None
+            or event_pid is None
+        ):
+            return False
+
+        return (
+            normalized_pid
+            == event_pid
+        )
+
+    # =========================
+    # ANALYZE SINGLE PROCESS
+    # =========================
+
+    @classmethod
+    def analyze_process(
+        cls,
+        db: Session,
+        *,
+        computer: str | None,
+        process_guid: str | None = None,
+        process_id: int | None = None,
+        process_image: str | None = None,
+        username: str | None = None,
+        window_minutes: int | None = None,
+    ) -> CorrelationResult | None:
+
+        if (
+            not process_guid
+            and process_id is None
+        ):
+            return None
+
+        recent_events = (
+            cls.get_recent_events(
+                db=db,
+                computer=computer,
+                window_minutes=(
+                    window_minutes
+                ),
+            )
+        )
+
+        process_events = [
+            event
+            for event
+            in recent_events
+            if cls._matches_process(
+                event,
+                computer=computer,
+                process_guid=(
+                    process_guid
+                ),
+                process_id=(
+                    process_id
+                ),
+            )
+        ]
+
+        if not process_events:
+            return None
+
+        first = (
+            process_events[0]
+        )
+
+        final_username = (
+            username
+            or first.get(
+                "username"
+            )
+        )
+
+        final_image = (
+            process_image
+            or first.get(
+                "image"
+            )
+        )
+
+        final_guid = (
+            process_guid
+            or first.get(
+                "process_guid"
+            )
+        )
+
+        final_pid = (
+            cls._normalize_pid(
+                process_id
+            )
+            or cls._normalize_pid(
+                first.get(
+                    "process_id"
+                )
+            )
+        )
+
+        return (
+            CorrelationEngine
+            .analyze(
+                events=process_events,
+                username=(
+                    final_username
+                ),
+                computer=computer,
+                process_guid=(
+                    final_guid
+                ),
+                process_id=(
+                    final_pid
+                ),
+                process_image=(
+                    final_image
+                ),
+            )
+        )
+
+    # =========================
+    # PERSIST SINGLE PROCESS
+    # =========================
+
+    @classmethod
+    def process_detection(
+        cls,
+        db: Session,
+        *,
+        computer: str | None,
+        process_guid: str | None = None,
+        process_id: int | None = None,
+        process_image: str | None = None,
+        username: str | None = None,
+        window_minutes: int | None = None,
+    ):
+
+        result = (
+            cls.analyze_process(
+                db=db,
+                computer=computer,
+                process_guid=(
+                    process_guid
+                ),
+                process_id=(
+                    process_id
+                ),
+                process_image=(
+                    process_image
+                ),
+                username=username,
+                window_minutes=(
+                    window_minutes
+                ),
+            )
+        )
+
+        if result is None:
+            return None
+
+        if not result.detected:
+            return None
+
+        # Lazy import prevents
+        # circular dependency.
+        from app.modules.alert.service import (
+            AlertService,
+        )
+
+        return (
+            AlertService
+            .create_from_correlation(
+                db=db,
+                result=result,
+            )
+        )
+
+    # =========================
+    # ANALYZE ALL PROCESSES
+    # USED BY GET API / UI
+    # =========================
+
     @classmethod
     def analyze_processes(
         cls,
@@ -327,6 +609,14 @@ class CorrelationService:
                 )
             )
 
+            # Avoid grouping all events
+            # with missing ProcessGuid/PID.
+            if (
+                key[0] == "pid"
+                and key[-1] is None
+            ):
+                continue
+
             grouped.setdefault(
                 key,
                 [],
@@ -338,10 +628,9 @@ class CorrelationService:
             CorrelationResult
         ] = []
 
-        for (
-            key,
-            process_events,
-        ) in grouped.items():
+        for process_events in (
+            grouped.values()
+        ):
 
             if not process_events:
                 continue
@@ -388,9 +677,7 @@ class CorrelationService:
                     events=(
                         process_events
                     ),
-                    username=(
-                        username
-                    ),
+                    username=username,
                     computer=(
                         computer_name
                     ),
@@ -417,3 +704,53 @@ class CorrelationService:
         )
 
         return results
+
+    # =========================
+    # MANUAL BATCH PROCESSING
+    # KEEP FOR POST ENDPOINT
+    # =========================
+
+    @classmethod
+    def process_detections(
+        cls,
+        db: Session,
+        *,
+        computer: str | None = None,
+        window_minutes: int | None = None,
+    ):
+
+        from app.modules.alert.service import (
+            AlertService,
+        )
+
+        results = (
+            cls.analyze_processes(
+                db=db,
+                computer=computer,
+                window_minutes=(
+                    window_minutes
+                ),
+            )
+        )
+
+        alerts = []
+
+        for result in results:
+
+            if not result.detected:
+                continue
+
+            alert = (
+                AlertService
+                .create_from_correlation(
+                    db=db,
+                    result=result,
+                )
+            )
+
+            if alert:
+                alerts.append(
+                    alert
+                )
+
+        return alerts
