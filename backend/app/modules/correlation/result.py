@@ -21,7 +21,25 @@ class CorrelationResult:
 
     process_image: str | None = None
 
+    parent_process_guid: str | None = None
+
+    parent_process_id: int | None = None
+
+    parent_image: str | None = None
+
     event_ids: list[int] = field(
+        default_factory=list
+    )
+
+    process_chain: list[
+        dict[str, Any]
+    ] = field(
+        default_factory=list
+    )
+
+    related_process_guids: list[
+        str
+    ] = field(
         default_factory=list
     )
 
@@ -29,10 +47,14 @@ class CorrelationResult:
         default_factory=list
     )
 
-    events: list[dict[str, Any]] = field(
+    events: list[
+        dict[str, Any]
+    ] = field(
         default_factory=list
     )
 
-    mitre_techniques: list[str] = field(
+    mitre_techniques: list[
+        str
+    ] = field(
         default_factory=list
     )

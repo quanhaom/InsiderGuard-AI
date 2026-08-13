@@ -1,3 +1,4 @@
+from pathlib import PureWindowsPath
 from typing import Any
 
 from app.modules.correlation.result import (
@@ -16,11 +17,11 @@ class CorrelationEngine:
         22: 10,    # DNS Query
         3: 15,     # Network Connection
         11: 20,    # File Create
-        13: 25,    # Registry Modification
+        13: 25,    # Registry Value Set
     }
 
     # =========================
-    # SEQUENCE BONUSES
+    # EVENT SEQUENCES
     # =========================
 
     SEQUENCE_BONUSES = {
@@ -108,8 +109,65 @@ class CorrelationEngine:
         "psexec.exe",
     }
 
+    OFFICE_PROCESSES = {
+        "winword.exe",
+        "excel.exe",
+        "powerpnt.exe",
+        "outlook.exe",
+    }
+
+    SCRIPTING_PROCESSES = {
+        "powershell.exe",
+        "pwsh.exe",
+        "cmd.exe",
+        "wscript.exe",
+        "cscript.exe",
+        "mshta.exe",
+    }
+
+    LOLBIN_PROCESSES = {
+        "certutil.exe",
+        "rundll32.exe",
+        "regsvr32.exe",
+        "bitsadmin.exe",
+        "wmic.exe",
+        "mshta.exe",
+    }
+
     # =========================
-    # MITRE MAPPING
+    # DOWNLOAD FILE TYPES
+    # =========================
+
+    SCRIPT_EXTENSIONS = {
+        ".ps1",
+        ".bat",
+        ".cmd",
+        ".vbs",
+        ".js",
+        ".jse",
+        ".wsf",
+        ".hta",
+    }
+
+    EXECUTABLE_EXTENSIONS = {
+        ".exe",
+        ".dll",
+        ".msi",
+        ".scr",
+        ".com",
+        ".cpl",
+    }
+
+    ARCHIVE_EXTENSIONS = {
+        ".zip",
+        ".rar",
+        ".7z",
+        ".iso",
+        ".img",
+    }
+
+    # =========================
+    # MITRE
     # =========================
 
     MITRE_MAP = {
@@ -181,7 +239,52 @@ class CorrelationEngine:
         )
 
     # =========================
-    # SEQUENCE DETECTION
+    # EVENT VALUE
+    # =========================
+
+    @staticmethod
+    def _event_value(
+        event: dict[str, Any],
+        *names: str,
+    ):
+
+        for name in names:
+
+            value = event.get(
+                name
+            )
+
+            if value not in {
+                None,
+                "",
+            }:
+                return value
+
+        details = event.get(
+            "details"
+        )
+
+        if isinstance(
+            details,
+            dict,
+        ):
+
+            for name in names:
+
+                value = details.get(
+                    name
+                )
+
+                if value not in {
+                    None,
+                    "",
+                }:
+                    return value
+
+        return None
+
+    # =========================
+    # EVENT SEQUENCE
     # =========================
 
     @staticmethod
@@ -201,6 +304,7 @@ class CorrelationEngine:
                 event_id
                 == sequence[position]
             ):
+
                 position += 1
 
                 if (
@@ -210,6 +314,202 @@ class CorrelationEngine:
                     return True
 
         return False
+
+    # =========================
+    # PROCESS CHAIN NAMES
+    # =========================
+
+    @classmethod
+    def _chain_process_names(
+        cls,
+        process_chain: list[
+            dict[str, Any]
+        ],
+    ) -> list[str]:
+
+        names: list[str] = []
+
+        for node in process_chain:
+
+            name = (
+                cls._process_name(
+                    node.get(
+                        "image"
+                    )
+                )
+            )
+
+            if name:
+                names.append(
+                    name
+                )
+
+        return names
+
+    # =========================
+    # CHAIN TRANSITION
+    # =========================
+
+    @staticmethod
+    def _has_process_transition(
+        process_names: list[str],
+        parent_set: set[str],
+        child_set: set[str],
+    ) -> bool:
+
+        if len(
+            process_names
+        ) < 2:
+            return False
+
+        for index in range(
+            len(process_names) - 1
+        ):
+
+            parent = (
+                process_names[index]
+            )
+
+            child = (
+                process_names[
+                    index + 1
+                ]
+            )
+
+            if (
+                parent in parent_set
+                and child in child_set
+            ):
+                return True
+
+        return False
+
+    # =========================
+    # DOWNLOAD CONTEXT
+    # =========================
+
+    @classmethod
+    def _download_context(
+        cls,
+        events: list[
+            dict[str, Any]
+        ],
+    ) -> tuple[
+        int,
+        list[str],
+    ]:
+
+        score = 0
+
+        reasons: list[str] = []
+
+        for event in events:
+
+            if (
+                event.get(
+                    "event_id"
+                )
+                != 11
+            ):
+                continue
+
+            target = (
+                cls._event_value(
+                    event,
+                    "target_filename",
+                    "TargetFilename",
+                )
+            )
+
+            if not target:
+                continue
+
+            normalized = (
+                str(target)
+                .replace(
+                    "/",
+                    "\\",
+                )
+                .lower()
+            )
+
+            in_downloads = (
+                "\\downloads\\"
+                in normalized
+            )
+
+            extension = (
+                PureWindowsPath(
+                    normalized
+                )
+                .suffix
+                .lower()
+            )
+
+            if in_downloads:
+
+                score += 10
+
+                reasons.append(
+                    "Process tree created "
+                    "a file in the user's "
+                    "Downloads directory"
+                )
+
+            if (
+                extension
+                in cls.SCRIPT_EXTENSIONS
+            ):
+
+                score += 15
+
+                reasons.append(
+                    "Process tree created "
+                    "a script file"
+                )
+
+            elif (
+                extension
+                in cls.EXECUTABLE_EXTENSIONS
+            ):
+
+                score += 20
+
+                reasons.append(
+                    "Process tree created "
+                    "an executable file"
+                )
+
+            elif (
+                extension
+                in cls.ARCHIVE_EXTENSIONS
+            ):
+
+                score += 10
+
+                reasons.append(
+                    "Process tree created "
+                    "an archive or disk image"
+                )
+
+            # Count only first strong
+            # matching file to reduce
+            # Event 11 spam inflation.
+            if (
+                in_downloads
+                or extension
+                in cls.SCRIPT_EXTENSIONS
+                or extension
+                in cls.EXECUTABLE_EXTENSIONS
+                or extension
+                in cls.ARCHIVE_EXTENSIONS
+            ):
+                break
+
+        return (
+            score,
+            reasons,
+        )
 
     # =========================
     # ANALYZE
@@ -227,10 +527,27 @@ class CorrelationEngine:
         process_guid: str | None = None,
         process_id: int | None = None,
         process_image: str | None = None,
+        parent_process_guid: (
+            str | None
+        ) = None,
+        parent_process_id: (
+            int | None
+        ) = None,
+        parent_image: (
+            str | None
+        ) = None,
+        process_chain: list[
+            dict[str, Any]
+        ] | None = None,
     ) -> CorrelationResult:
 
+        process_chain = (
+            process_chain
+            or []
+        )
+
         # =========================
-        # EMPTY RESULT
+        # EMPTY
         # =========================
 
         if not events:
@@ -244,6 +561,18 @@ class CorrelationEngine:
                 process_guid=process_guid,
                 process_id=process_id,
                 process_image=process_image,
+                parent_process_guid=(
+                    parent_process_guid
+                ),
+                parent_process_id=(
+                    parent_process_id
+                ),
+                parent_image=(
+                    parent_image
+                ),
+                process_chain=(
+                    process_chain
+                ),
             )
 
         # =========================
@@ -268,12 +597,24 @@ class CorrelationEngine:
         )
 
         # =========================
-        # CONTEXT
+        # PROCESS CONTEXT
         # =========================
 
         process_name = (
             cls._process_name(
                 process_image
+            )
+        )
+
+        parent_process_name = (
+            cls._process_name(
+                parent_image
+            )
+        )
+
+        chain_process_names = (
+            cls._chain_process_names(
+                process_chain
             )
         )
 
@@ -310,18 +651,20 @@ class CorrelationEngine:
             for technique in (
                 cls.MITRE_MAP.get(
                     event_id,
-                    []
+                    [],
                 )
             ):
+
                 mitre.add(
                     technique
                 )
 
         # =========================
-        # BEST SEQUENCE BONUS
+        # EVENT SEQUENCE
         # =========================
 
         best_sequence = None
+
         best_bonus = 0
 
         for (
@@ -351,7 +694,7 @@ class CorrelationEngine:
             score += best_bonus
 
             sequence_text = (
-                " → ".join(
+                " -> ".join(
                     str(item)
                     for item
                     in best_sequence
@@ -359,8 +702,8 @@ class CorrelationEngine:
             )
 
             reasons.append(
-                "Observed process "
-                "behavior sequence: "
+                "Observed behavior "
+                "sequence: "
                 f"{sequence_text}"
             )
 
@@ -379,18 +722,13 @@ class CorrelationEngine:
             }
         )
 
-        # =========================
-        # MULTI-STAGE BONUS
-        # =========================
-
         if stage_count >= 4:
 
             score += 20
 
             reasons.append(
-                "Multi-stage activity "
-                "observed from the same "
-                "process"
+                "Multi-stage behavior "
+                "observed"
             )
 
         elif stage_count >= 3:
@@ -399,17 +737,19 @@ class CorrelationEngine:
 
             reasons.append(
                 "Multiple related "
-                "activities observed "
-                "from the same process"
+                "behavior stages observed"
             )
 
         # =========================
-        # PROCESS GUID CONFIDENCE
+        # SAME PROCESS
         # =========================
 
         if (
             process_guid
             and stage_count >= 2
+            and len(
+                process_chain
+            ) <= 1
         ):
 
             score += 10
@@ -432,19 +772,158 @@ class CorrelationEngine:
 
             reasons.append(
                 "Activity originated "
-                "from a commonly abused "
-                "process: "
-                f"{process_name}"
+                "from commonly abused "
+                f"process {process_name}"
             )
 
         # =========================
-        # HIGH-RISK PROCESS
-        # + FILE CREATE
+        # TREE PRESENT
+        # =========================
+
+        if len(
+            process_chain
+        ) >= 2:
+
+            score += 10
+
+            reasons.append(
+                "Activity spans "
+                f"{len(process_chain)} "
+                "related processes"
+            )
+
+        # =========================
+        # OFFICE -> SCRIPT
+        # =========================
+
+        office_to_script = (
+            cls._has_process_transition(
+                chain_process_names,
+                cls.OFFICE_PROCESSES,
+                cls.SCRIPTING_PROCESSES,
+            )
+        )
+
+        if office_to_script:
+
+            score += 30
+
+            reasons.append(
+                "Office application "
+                "spawned a scripting "
+                "process"
+            )
+
+            mitre.add(
+                "T1059"
+            )
+
+        # Direct parent context can
+        # still detect relationship if
+        # parent node fell outside window.
+        elif (
+            parent_process_name
+            in cls.OFFICE_PROCESSES
+            and process_name
+            in cls.SCRIPTING_PROCESSES
+        ):
+
+            score += 30
+
+            reasons.append(
+                "Office application "
+                "spawned scripting "
+                f"process {process_name}"
+            )
+
+            mitre.add(
+                "T1059"
+            )
+
+        # =========================
+        # SCRIPT -> LOLBIN
+        # =========================
+
+        script_to_lolbin = (
+            cls._has_process_transition(
+                chain_process_names,
+                cls.SCRIPTING_PROCESSES,
+                cls.LOLBIN_PROCESSES,
+            )
+        )
+
+        if script_to_lolbin:
+
+            score += 25
+
+            reasons.append(
+                "Scripting process "
+                "spawned a LOLBin"
+            )
+
+            mitre.add(
+                "T1218"
+            )
+
+        elif (
+            parent_process_name
+            in cls.SCRIPTING_PROCESSES
+            and process_name
+            in cls.LOLBIN_PROCESSES
+        ):
+
+            score += 25
+
+            reasons.append(
+                "Scripting process "
+                "spawned LOLBin "
+                f"{process_name}"
+            )
+
+            mitre.add(
+                "T1218"
+            )
+
+        # =========================
+        # TREE DNS
         # =========================
 
         if (
-            process_name
-            in cls.HIGH_RISK_PROCESSES
+            len(process_chain) >= 2
+            and 22
+            in unique_event_ids
+        ):
+
+            score += 10
+
+            reasons.append(
+                "Related process tree "
+                "performed DNS activity"
+            )
+
+        # =========================
+        # TREE NETWORK
+        # =========================
+
+        if (
+            len(process_chain) >= 2
+            and 3
+            in unique_event_ids
+        ):
+
+            score += 10
+
+            reasons.append(
+                "Related process tree "
+                "performed network activity"
+            )
+
+        # =========================
+        # TREE FILE
+        # =========================
+
+        if (
+            len(process_chain) >= 2
             and 11
             in unique_event_ids
         ):
@@ -452,18 +931,16 @@ class CorrelationEngine:
             score += 15
 
             reasons.append(
-                "High-risk process "
-                "created a file"
+                "Related process tree "
+                "created files"
             )
 
         # =========================
-        # HIGH-RISK PROCESS
-        # + REGISTRY
+        # TREE REGISTRY
         # =========================
 
         if (
-            process_name
-            in cls.HIGH_RISK_PROCESSES
+            len(process_chain) >= 2
             and 13
             in unique_event_ids
         ):
@@ -471,7 +948,7 @@ class CorrelationEngine:
             score += 20
 
             reasons.append(
-                "High-risk process "
+                "Related process tree "
                 "modified registry state"
             )
 
@@ -489,8 +966,54 @@ class CorrelationEngine:
             score += 20
 
             reasons.append(
-                "File creation followed "
-                "by registry modification"
+                "File creation and "
+                "registry modification "
+                "occurred in one chain"
+            )
+
+        # =========================
+        # DOWNLOAD CONTEXT
+        # =========================
+
+        download_score, (
+            download_reasons
+        ) = cls._download_context(
+            events
+        )
+
+        score += (
+            download_score
+        )
+
+        reasons.extend(
+            download_reasons
+        )
+
+        # =========================
+        # HIGH CONFIDENCE CHAIN
+        # =========================
+
+        if (
+            len(process_chain) >= 2
+            and (
+                office_to_script
+                or script_to_lolbin
+            )
+            and (
+                3 in unique_event_ids
+                or 22
+                in unique_event_ids
+            )
+            and 11
+            in unique_event_ids
+        ):
+
+            score += 20
+
+            reasons.append(
+                "High-confidence "
+                "execution, network and "
+                "file activity chain"
             )
 
         # =========================
@@ -500,19 +1023,20 @@ class CorrelationEngine:
         if (
             process_name
             in cls.TRUSTED_PROCESSES
+            and len(process_chain)
+            <= 1
         ):
 
             score -= 20
 
             reasons.append(
                 "Activity originated "
-                "from a commonly trusted "
-                "process: "
-                f"{process_name}"
+                "from commonly trusted "
+                f"process {process_name}"
             )
 
         # =========================
-        # NORMAL NETWORK PATTERN
+        # NORMAL NETWORK
         # =========================
 
         normal_network_chain = {
@@ -528,6 +1052,9 @@ class CorrelationEngine:
             .issubset(
                 normal_network_chain
             )
+            and len(
+                process_chain
+            ) <= 1
         ):
 
             score = min(
@@ -536,17 +1063,21 @@ class CorrelationEngine:
             )
 
             reasons.append(
-                "Observed behavior "
-                "matches a common "
-                "application network "
-                "activity pattern"
+                "Behavior matches "
+                "normal application "
+                "network activity"
             )
 
         # =========================
-        # SINGLE EVENT REDUCTION
+        # SINGLE EVENT
         # =========================
 
-        if stage_count == 1:
+        if (
+            stage_count == 1
+            and len(
+                process_chain
+            ) <= 1
+        ):
 
             score = min(
                 score,
@@ -565,6 +1096,9 @@ class CorrelationEngine:
                     3,
                 }
             )
+            and len(
+                process_chain
+            ) <= 1
         ):
 
             score = min(
@@ -573,14 +1107,13 @@ class CorrelationEngine:
             )
 
             reasons.append(
-                "DNS and network "
-                "activity without "
-                "additional suspicious "
-                "process behavior"
+                "DNS/network activity "
+                "without additional "
+                "suspicious behavior"
             )
 
         # =========================
-        # CLAMP SCORE
+        # CLAMP
         # =========================
 
         score = max(
@@ -591,27 +1124,33 @@ class CorrelationEngine:
             ),
         )
 
-        # =========================
-        # SEVERITY
-        # =========================
-
         severity = (
             cls._severity(
                 score
             )
         )
 
-        # =========================
-        # DETECTION
-        # =========================
-
         detected = (
             score >= 31
         )
 
-        # =========================
-        # RESULT
-        # =========================
+        related_process_guids = []
+
+        for node in process_chain:
+
+            guid = node.get(
+                "process_guid"
+            )
+
+            if (
+                guid
+                and guid
+                not in related_process_guids
+            ):
+
+                related_process_guids.append(
+                    guid
+                )
 
         return CorrelationResult(
             detected=detected,
@@ -622,7 +1161,22 @@ class CorrelationEngine:
             process_guid=process_guid,
             process_id=process_id,
             process_image=process_image,
+            parent_process_guid=(
+                parent_process_guid
+            ),
+            parent_process_id=(
+                parent_process_id
+            ),
+            parent_image=(
+                parent_image
+            ),
             event_ids=event_ids,
+            process_chain=(
+                process_chain
+            ),
+            related_process_guids=(
+                related_process_guids
+            ),
             reasons=reasons,
             events=events,
             mitre_techniques=sorted(

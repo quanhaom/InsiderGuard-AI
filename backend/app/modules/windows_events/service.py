@@ -62,6 +62,10 @@ from app.modules.ueba.sysmon_dns_detector import (
     SysmonDnsDetector,
 )
 
+from app.modules.ueba.download_file_detector import (
+    DownloadFileDetector,
+)
+
 from app.modules.correlation.service import (
     CorrelationService,
 )
@@ -86,56 +90,35 @@ class WindowsEventService:
         22,
     }
 
-    # =========================
-    # SAFE ATTRIBUTE
-    # =========================
-
     @staticmethod
     def _parsed_value(
         parsed,
         *names: str,
     ):
-
         for name in names:
-
-            if hasattr(
-                parsed,
-                name,
-            ):
-
-                value = getattr(
-                    parsed,
-                    name,
-                )
-
-                if value not in {
-                    None,
-                    "",
-                }:
-
-                    return value
 
             if isinstance(
                 parsed,
                 dict,
             ):
-
                 value = parsed.get(
                     name
                 )
 
-                if value not in {
+            else:
+                value = getattr(
+                    parsed,
+                    name,
                     None,
-                    "",
-                }:
+                )
 
-                    return value
+            if value not in {
+                None,
+                "",
+            }:
+                return value
 
         return None
-
-    # =========================
-    # PROCESS ID
-    # =========================
 
     @classmethod
     def _process_id(
@@ -165,10 +148,6 @@ class WindowsEventService:
         ):
             return None
 
-    # =========================
-    # CORRELATION
-    # =========================
-
     @classmethod
     def _run_correlation(
         cls,
@@ -178,11 +157,7 @@ class WindowsEventService:
         provider_key: str,
         parsed,
     ):
-
-        if (
-            provider_key
-            != SYSMON_PROVIDER
-        ):
+        if provider_key != SYSMON_PROVIDER:
             return None
 
         if (
@@ -222,7 +197,34 @@ class WindowsEventService:
             )
         )
 
-        # No reliable process identity.
+        # =========================
+        # TREE-AWARE CORRELATION
+        # =========================
+
+        if process_guid:
+
+            tree_alert = (
+                CorrelationService
+                .process_tree_detection(
+                    db=db,
+                    process_guid=(
+                        process_guid
+                    ),
+                    computer=(
+                        event.computer
+                    ),
+                    window_minutes=10,
+                )
+            )
+
+            if tree_alert is not None:
+                return tree_alert
+
+        # =========================
+        # FALLBACK:
+        # SAME PROCESS / PID
+        # =========================
+
         if (
             not process_guid
             and process_id is None
@@ -252,10 +254,6 @@ class WindowsEventService:
             )
         )
 
-    # =========================
-    # CORRELATION RESPONSE
-    # =========================
-
     @staticmethod
     def _correlation_payload(
         alert,
@@ -277,10 +275,6 @@ class WindowsEventService:
             "risk_score":
                 alert.risk_score,
         }
-
-    # =========================
-    # PROCESS EVENT
-    # =========================
 
     @classmethod
     def process_event(
@@ -341,22 +335,17 @@ class WindowsEventService:
             )
         )
 
-        # Make sure SQLAlchemy flushes
-        # normalized event before
-        # correlation query.
         db.flush()
 
         # =========================
-        # INCREMENTAL CORRELATION
+        # CORRELATION
         # =========================
 
         correlation_alert = (
             cls._run_correlation(
                 db=db,
                 event=event,
-                provider_key=(
-                    provider_key
-                ),
+                provider_key=provider_key,
                 parsed=parsed,
             )
         )
@@ -369,14 +358,12 @@ class WindowsEventService:
 
         # =========================
         # SECURITY 4624
-        # SUCCESS LOGIN
         # =========================
 
         if (
             provider_key
             == SECURITY_PROVIDER
-            and event.event_id
-            == 4624
+            and event.event_id == 4624
         ):
 
             login_event = (
@@ -389,9 +376,7 @@ class WindowsEventService:
 
             BehaviorProfileService.build_profile(
                 db=db,
-                username=(
-                    parsed.username
-                ),
+                username=parsed.username,
             )
 
             return {
@@ -416,14 +401,12 @@ class WindowsEventService:
 
         # =========================
         # SECURITY 4625
-        # FAILED LOGIN
         # =========================
 
         if (
             provider_key
             == SECURITY_PROVIDER
-            and event.event_id
-            == 4625
+            and event.event_id == 4625
         ):
 
             from app.modules.failed_login_events.service import (
@@ -431,26 +414,24 @@ class WindowsEventService:
             )
 
             failed_event = (
-                FailedLoginEventService.create(
+                FailedLoginEventService
+                .create(
                     db=db,
                     payload=parsed,
                 )
             )
 
             detection_result = (
-                FailedLoginDetector.evaluate(
+                FailedLoginDetector
+                .evaluate(
                     db=db,
-                    event=(
-                        failed_event
-                    ),
+                    event=failed_event,
                 )
             )
 
             BehaviorProfileService.build_profile(
                 db=db,
-                username=(
-                    parsed.username
-                ),
+                username=parsed.username,
             )
 
             return {
@@ -478,14 +459,12 @@ class WindowsEventService:
 
         # =========================
         # SECURITY 4672
-        # PRIVILEGES
         # =========================
 
         if (
             provider_key
             == SECURITY_PROVIDER
-            and event.event_id
-            == 4672
+            and event.event_id == 4672
         ):
 
             detection_result = (
@@ -518,14 +497,12 @@ class WindowsEventService:
 
         # =========================
         # SECURITY 4688
-        # PROCESS CREATE
         # =========================
 
         if (
             provider_key
             == SECURITY_PROVIDER
-            and event.event_id
-            == 4688
+            and event.event_id == 4688
         ):
 
             detection_result = (
@@ -558,14 +535,12 @@ class WindowsEventService:
 
         # =========================
         # SECURITY 4720
-        # ACCOUNT CREATED
         # =========================
 
         if (
             provider_key
             == SECURITY_PROVIDER
-            and event.event_id
-            == 4720
+            and event.event_id == 4720
         ):
 
             detection_result = (
@@ -598,14 +573,12 @@ class WindowsEventService:
 
         # =========================
         # SECURITY 4728
-        # GROUP MEMBERSHIP
         # =========================
 
         if (
             provider_key
             == SECURITY_PROVIDER
-            and event.event_id
-            == 4728
+            and event.event_id == 4728
         ):
 
             detection_result = (
@@ -638,14 +611,12 @@ class WindowsEventService:
 
         # =========================
         # SYSMON 1
-        # PROCESS CREATE
         # =========================
 
         if (
             provider_key
             == SYSMON_PROVIDER
-            and event.event_id
-            == 1
+            and event.event_id == 1
         ):
 
             detection_result = (
@@ -681,14 +652,12 @@ class WindowsEventService:
 
         # =========================
         # SYSMON 3
-        # NETWORK CONNECTION
         # =========================
 
         if (
             provider_key
             == SYSMON_PROVIDER
-            and event.event_id
-            == 3
+            and event.event_id == 3
         ):
 
             detection_result = (
@@ -724,18 +693,25 @@ class WindowsEventService:
 
         # =========================
         # SYSMON 11
-        # FILE CREATE
+        # FILE + DOWNLOAD
         # =========================
 
         if (
             provider_key
             == SYSMON_PROVIDER
-            and event.event_id
-            == 11
+            and event.event_id == 11
         ):
 
-            detection_result = (
+            file_detection = (
                 SysmonFileDetector
+                .evaluate(
+                    db=db,
+                    parsed=parsed,
+                )
+            )
+
+            download_detection = (
+                DownloadFileDetector
                 .evaluate(
                     db=db,
                     parsed=parsed,
@@ -758,8 +734,13 @@ class WindowsEventService:
                 "provider":
                     event.provider,
 
-                "detection":
-                    detection_result,
+                "detection": {
+                    "file":
+                        file_detection,
+
+                    "download":
+                        download_detection,
+                },
 
                 "correlation":
                     correlation_data,
@@ -767,14 +748,12 @@ class WindowsEventService:
 
         # =========================
         # SYSMON 13
-        # REGISTRY VALUE SET
         # =========================
 
         if (
             provider_key
             == SYSMON_PROVIDER
-            and event.event_id
-            == 13
+            and event.event_id == 13
         ):
 
             detection_result = (
@@ -810,14 +789,12 @@ class WindowsEventService:
 
         # =========================
         # SYSMON 22
-        # DNS QUERY
         # =========================
 
         if (
             provider_key
             == SYSMON_PROVIDER
-            and event.event_id
-            == 22
+            and event.event_id == 22
         ):
 
             detection_result = (

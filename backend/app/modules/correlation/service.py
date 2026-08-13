@@ -36,7 +36,7 @@ class CorrelationService:
     }
 
     # =========================
-    # DETAILS PARSER
+    # DETAILS
     # =========================
 
     @staticmethod
@@ -57,7 +57,9 @@ class CorrelationService:
             details,
             str,
         ):
+
             try:
+
                 parsed = json.loads(
                     details
                 )
@@ -77,7 +79,7 @@ class CorrelationService:
         return {}
 
     # =========================
-    # PID NORMALIZATION
+    # PID
     # =========================
 
     @staticmethod
@@ -89,8 +91,11 @@ class CorrelationService:
             return None
 
         try:
+
             return int(
-                str(value).strip()
+                str(
+                    value
+                ).strip()
             )
 
         except (
@@ -100,7 +105,32 @@ class CorrelationService:
             return None
 
     # =========================
-    # EVENT SERIALIZATION
+    # GUID
+    # =========================
+
+    @staticmethod
+    def _normalize_guid(
+        value,
+    ) -> str | None:
+
+        if value is None:
+            return None
+
+        normalized = (
+            str(
+                value
+            )
+            .strip()
+            .lower()
+        )
+
+        if not normalized:
+            return None
+
+        return normalized
+
+    # =========================
+    # SERIALIZE
     # =========================
 
     @classmethod
@@ -142,6 +172,33 @@ class CorrelationService:
             )
         )
 
+        parent_process_guid = (
+            details.get(
+                "parent_process_guid"
+            )
+            or details.get(
+                "ParentProcessGuid"
+            )
+        )
+
+        parent_process_id = (
+            details.get(
+                "parent_process_id"
+            )
+            or details.get(
+                "ParentProcessId"
+            )
+        )
+
+        parent_image = (
+            details.get(
+                "parent_image"
+            )
+            or details.get(
+                "ParentImage"
+            )
+        )
+
         return {
             "id":
                 event.id,
@@ -162,7 +219,9 @@ class CorrelationService:
                 event.severity,
 
             "process_guid":
-                process_guid,
+                cls._normalize_guid(
+                    process_guid
+                ),
 
             "process_id":
                 cls._normalize_pid(
@@ -171,6 +230,19 @@ class CorrelationService:
 
             "image":
                 image,
+
+            "parent_process_guid":
+                cls._normalize_guid(
+                    parent_process_guid
+                ),
+
+            "parent_process_id":
+                cls._normalize_pid(
+                    parent_process_id
+                ),
+
+            "parent_image":
+                parent_image,
 
             "details":
                 details,
@@ -197,8 +269,10 @@ class CorrelationService:
     ) -> tuple:
 
         process_guid = (
-            event.get(
-                "process_guid"
+            cls._normalize_guid(
+                event.get(
+                    "process_guid"
+                )
             )
         )
 
@@ -206,11 +280,7 @@ class CorrelationService:
 
             return (
                 "guid",
-                str(
-                    process_guid
-                )
-                .strip()
-                .lower(),
+                process_guid,
             )
 
         process_id = (
@@ -352,30 +422,25 @@ class CorrelationService:
         ):
             return False
 
-        event_guid = (
-            event.get(
-                "process_guid"
+        normalized_guid = (
+            cls._normalize_guid(
+                process_guid
             )
         )
 
-        # ProcessGuid has highest priority.
-        if process_guid:
+        event_guid = (
+            cls._normalize_guid(
+                event.get(
+                    "process_guid"
+                )
+            )
+        )
 
-            if not event_guid:
-                return False
+        if normalized_guid:
 
             return (
-                str(
-                    event_guid
-                )
-                .strip()
-                .lower()
-                ==
-                str(
-                    process_guid
-                )
-                .strip()
-                .lower()
+                event_guid
+                == normalized_guid
             )
 
         normalized_pid = (
@@ -404,7 +469,7 @@ class CorrelationService:
         )
 
     # =========================
-    # ANALYZE SINGLE PROCESS
+    # SINGLE PROCESS
     # =========================
 
     @classmethod
@@ -474,7 +539,9 @@ class CorrelationService:
         )
 
         final_guid = (
-            process_guid
+            cls._normalize_guid(
+                process_guid
+            )
             or first.get(
                 "process_guid"
             )
@@ -484,12 +551,17 @@ class CorrelationService:
             cls._normalize_pid(
                 process_id
             )
-            or cls._normalize_pid(
-                first.get(
-                    "process_id"
+        )
+
+        if final_pid is None:
+
+            final_pid = (
+                cls._normalize_pid(
+                    first.get(
+                        "process_id"
+                    )
                 )
             )
-        )
 
         return (
             CorrelationEngine
@@ -508,11 +580,26 @@ class CorrelationService:
                 process_image=(
                     final_image
                 ),
+                parent_process_guid=(
+                    first.get(
+                        "parent_process_guid"
+                    )
+                ),
+                parent_process_id=(
+                    first.get(
+                        "parent_process_id"
+                    )
+                ),
+                parent_image=(
+                    first.get(
+                        "parent_image"
+                    )
+                ),
             )
         )
 
     # =========================
-    # PERSIST SINGLE PROCESS
+    # PROCESS DETECTION
     # =========================
 
     @classmethod
@@ -554,8 +641,711 @@ class CorrelationService:
         if not result.detected:
             return None
 
-        # Lazy import prevents
-        # circular dependency.
+        from app.modules.alert.service import (
+            AlertService,
+        )
+
+        return (
+            AlertService
+            .create_from_correlation(
+                db=db,
+                result=result,
+            )
+        )
+
+    # =========================
+    # BUILD PROCESS TREE
+    # =========================
+
+    @classmethod
+    def _build_process_tree(
+        cls,
+        events: list[
+            dict[str, Any]
+        ],
+    ) -> dict[
+        str,
+        dict[str, Any],
+    ]:
+
+        nodes: dict[
+            str,
+            dict[str, Any],
+        ] = {}
+
+        for event in events:
+
+            process_guid = (
+                cls._normalize_guid(
+                    event.get(
+                        "process_guid"
+                    )
+                )
+            )
+
+            if not process_guid:
+                continue
+
+            node = nodes.setdefault(
+                process_guid,
+                {
+                    "process_guid":
+                        process_guid,
+
+                    "process_id":
+                        None,
+
+                    "image":
+                        None,
+
+                    "username":
+                        None,
+
+                    "computer":
+                        event.get(
+                            "computer"
+                        ),
+
+                    "parent_process_guid":
+                        None,
+
+                    "parent_process_id":
+                        None,
+
+                    "parent_image":
+                        None,
+
+                    "events":
+                        [],
+
+                    "children":
+                        [],
+                },
+            )
+
+            node[
+                "events"
+            ].append(
+                event
+            )
+
+            if (
+                event.get(
+                    "process_id"
+                )
+                is not None
+            ):
+
+                node[
+                    "process_id"
+                ] = event.get(
+                    "process_id"
+                )
+
+            if event.get(
+                "image"
+            ):
+
+                node[
+                    "image"
+                ] = event.get(
+                    "image"
+                )
+
+            if event.get(
+                "username"
+            ):
+
+                node[
+                    "username"
+                ] = event.get(
+                    "username"
+                )
+
+            if (
+                event.get(
+                    "event_id"
+                )
+                == 1
+            ):
+
+                parent_guid = (
+                    cls._normalize_guid(
+                        event.get(
+                            "parent_process_guid"
+                        )
+                    )
+                )
+
+                if parent_guid:
+
+                    node[
+                        "parent_process_guid"
+                    ] = parent_guid
+
+                if (
+                    event.get(
+                        "parent_process_id"
+                    )
+                    is not None
+                ):
+
+                    node[
+                        "parent_process_id"
+                    ] = event.get(
+                        "parent_process_id"
+                    )
+
+                if event.get(
+                    "parent_image"
+                ):
+
+                    node[
+                        "parent_image"
+                    ] = event.get(
+                        "parent_image"
+                    )
+
+        # =========================
+        # CONNECT CHILDREN
+        # =========================
+
+        for (
+            guid,
+            node,
+        ) in nodes.items():
+
+            parent_guid = (
+                node.get(
+                    "parent_process_guid"
+                )
+            )
+
+            if not parent_guid:
+                continue
+
+            parent = nodes.get(
+                parent_guid
+            )
+
+            if parent is None:
+                continue
+
+            children = parent[
+                "children"
+            ]
+
+            if guid not in children:
+
+                children.append(
+                    guid
+                )
+
+        return nodes
+
+    # =========================
+    # DESCENDANTS
+    # =========================
+
+    @classmethod
+    def _collect_descendants(
+        cls,
+        process_guid: str,
+        nodes: dict[
+            str,
+            dict[str, Any],
+        ],
+    ) -> list[str]:
+
+        root_guid = (
+            cls._normalize_guid(
+                process_guid
+            )
+        )
+
+        if not root_guid:
+            return []
+
+        if root_guid not in nodes:
+            return []
+
+        result: list[str] = []
+
+        visited: set[str] = set()
+
+        stack = [
+            root_guid
+        ]
+
+        while stack:
+
+            current_guid = (
+                stack.pop()
+            )
+
+            if (
+                current_guid
+                in visited
+            ):
+                continue
+
+            visited.add(
+                current_guid
+            )
+
+            node = nodes.get(
+                current_guid
+            )
+
+            if node is None:
+                continue
+
+            for child_guid in (
+                node.get(
+                    "children",
+                    [],
+                )
+            ):
+
+                if (
+                    child_guid
+                    in visited
+                ):
+                    continue
+
+                result.append(
+                    child_guid
+                )
+
+                stack.append(
+                    child_guid
+                )
+
+        return result
+
+    # =========================
+    # ANCESTORS
+    # =========================
+
+    @classmethod
+    def _collect_ancestors(
+        cls,
+        process_guid: str,
+        nodes: dict[
+            str,
+            dict[str, Any],
+        ],
+    ) -> list[str]:
+
+        current_guid = (
+            cls._normalize_guid(
+                process_guid
+            )
+        )
+
+        if not current_guid:
+            return []
+
+        ancestors: list[str] = []
+
+        visited: set[str] = set()
+
+        while current_guid:
+
+            if (
+                current_guid
+                in visited
+            ):
+                break
+
+            visited.add(
+                current_guid
+            )
+
+            node = nodes.get(
+                current_guid
+            )
+
+            if node is None:
+                break
+
+            parent_guid = (
+                cls._normalize_guid(
+                    node.get(
+                        "parent_process_guid"
+                    )
+                )
+            )
+
+            if not parent_guid:
+                break
+
+            if parent_guid not in nodes:
+                break
+
+            ancestors.append(
+                parent_guid
+            )
+
+            current_guid = (
+                parent_guid
+            )
+
+        # root -> parent
+        ancestors.reverse()
+
+        return ancestors
+
+    # =========================
+    # TREE DEBUG
+    # =========================
+
+    @classmethod
+    def get_process_tree(
+        cls,
+        db: Session,
+        *,
+        computer: str | None = None,
+        window_minutes: int | None = None,
+    ) -> list[
+        dict[str, Any]
+    ]:
+
+        events = (
+            cls.get_recent_events(
+                db=db,
+                computer=computer,
+                window_minutes=(
+                    window_minutes
+                ),
+            )
+        )
+
+        nodes = (
+            cls._build_process_tree(
+                events
+            )
+        )
+
+        results = []
+
+        for (
+            guid,
+            node,
+        ) in nodes.items():
+
+            event_ids = sorted({
+                event.get(
+                    "event_id"
+                )
+                for event
+                in node.get(
+                    "events",
+                    [],
+                )
+                if event.get(
+                    "event_id"
+                )
+                is not None
+            })
+
+            results.append(
+                {
+                    "process_guid":
+                        guid,
+
+                    "process_id":
+                        node.get(
+                            "process_id"
+                        ),
+
+                    "image":
+                        node.get(
+                            "image"
+                        ),
+
+                    "username":
+                        node.get(
+                            "username"
+                        ),
+
+                    "computer":
+                        node.get(
+                            "computer"
+                        ),
+
+                    "parent_process_guid":
+                        node.get(
+                            "parent_process_guid"
+                        ),
+
+                    "parent_process_id":
+                        node.get(
+                            "parent_process_id"
+                        ),
+
+                    "parent_image":
+                        node.get(
+                            "parent_image"
+                        ),
+
+                    "children":
+                        node.get(
+                            "children",
+                            [],
+                        ),
+
+                    "ancestors":
+                        cls._collect_ancestors(
+                            guid,
+                            nodes,
+                        ),
+
+                    "descendants":
+                        cls._collect_descendants(
+                            guid,
+                            nodes,
+                        ),
+
+                    "event_ids":
+                        event_ids,
+
+                    "event_count":
+                        len(
+                            node.get(
+                                "events",
+                                [],
+                            )
+                        ),
+                }
+            )
+
+        return results
+
+    # =========================
+    # TREE-AWARE ANALYSIS
+    # =========================
+
+    @classmethod
+    def analyze_process_tree(
+        cls,
+        db: Session,
+        *,
+        process_guid: str,
+        computer: str | None = None,
+        window_minutes: int | None = None,
+    ) -> CorrelationResult | None:
+
+        events = (
+            cls.get_recent_events(
+                db=db,
+                computer=computer,
+                window_minutes=(
+                    window_minutes
+                ),
+            )
+        )
+
+        nodes = (
+            cls._build_process_tree(
+                events
+            )
+        )
+
+        root_guid = (
+            cls._normalize_guid(
+                process_guid
+            )
+        )
+
+        if not root_guid:
+            return None
+
+        root = nodes.get(
+            root_guid
+        )
+
+        if root is None:
+            return None
+
+        ancestors = (
+            cls._collect_ancestors(
+                root_guid,
+                nodes,
+            )
+        )
+
+        descendants = (
+            cls._collect_descendants(
+                root_guid,
+                nodes,
+            )
+        )
+
+        related_guids = []
+
+        for guid in (
+            ancestors
+            + [
+                root_guid
+            ]
+            + descendants
+        ):
+
+            if (
+                guid
+                not in related_guids
+            ):
+
+                related_guids.append(
+                    guid
+                )
+
+        related_set = set(
+            related_guids
+        )
+
+        tree_events = [
+            event
+            for event in events
+            if (
+                cls._normalize_guid(
+                    event.get(
+                        "process_guid"
+                    )
+                )
+                in related_set
+            )
+        ]
+
+        if not tree_events:
+            return None
+
+        process_chain = []
+
+        for guid in related_guids:
+
+            node = nodes.get(
+                guid
+            )
+
+            if not node:
+                continue
+
+            process_chain.append(
+                {
+                    "process_guid":
+                        guid,
+
+                    "process_id":
+                        node.get(
+                            "process_id"
+                        ),
+
+                    "image":
+                        node.get(
+                            "image"
+                        ),
+
+                    "parent_process_guid":
+                        node.get(
+                            "parent_process_guid"
+                        ),
+
+                    "parent_process_id":
+                        node.get(
+                            "parent_process_id"
+                        ),
+
+                    "parent_image":
+                        node.get(
+                            "parent_image"
+                        ),
+                }
+            )
+
+        return (
+            CorrelationEngine
+            .analyze(
+                events=tree_events,
+
+                username=root.get(
+                    "username"
+                ),
+
+                computer=root.get(
+                    "computer"
+                ),
+
+                process_guid=(
+                    root.get(
+                        "process_guid"
+                    )
+                ),
+
+                process_id=root.get(
+                    "process_id"
+                ),
+
+                process_image=root.get(
+                    "image"
+                ),
+
+                parent_process_guid=(
+                    root.get(
+                        "parent_process_guid"
+                    )
+                ),
+
+                parent_process_id=(
+                    root.get(
+                        "parent_process_id"
+                    )
+                ),
+
+                parent_image=root.get(
+                    "parent_image"
+                ),
+
+                process_chain=(
+                    process_chain
+                ),
+            )
+        )
+
+    # =========================
+    # TREE PERSISTENCE
+    # =========================
+
+    @classmethod
+    def process_tree_detection(
+        cls,
+        db: Session,
+        *,
+        process_guid: str,
+        computer: str | None = None,
+        window_minutes: int | None = None,
+    ):
+
+        result = (
+            cls.analyze_process_tree(
+                db=db,
+                process_guid=(
+                    process_guid
+                ),
+                computer=computer,
+                window_minutes=(
+                    window_minutes
+                ),
+            )
+        )
+
+        if result is None:
+            return None
+
+        if not result.detected:
+            return None
+
         from app.modules.alert.service import (
             AlertService,
         )
@@ -570,7 +1360,6 @@ class CorrelationService:
 
     # =========================
     # ANALYZE ALL PROCESSES
-    # USED BY GET API / UI
     # =========================
 
     @classmethod
@@ -609,11 +1398,10 @@ class CorrelationService:
                 )
             )
 
-            # Avoid grouping all events
-            # with missing ProcessGuid/PID.
             if (
                 key[0] == "pid"
-                and key[-1] is None
+                and key[-1]
+                is None
             ):
                 continue
 
@@ -624,9 +1412,7 @@ class CorrelationService:
                 event
             )
 
-        results: list[
-            CorrelationResult
-        ] = []
+        results = []
 
         for process_events in (
             grouped.values()
@@ -639,56 +1425,45 @@ class CorrelationService:
                 process_events[0]
             )
 
-            process_guid = (
-                first.get(
-                    "process_guid"
-                )
-            )
-
-            process_id = (
-                cls._normalize_pid(
-                    first.get(
-                        "process_id"
-                    )
-                )
-            )
-
-            process_image = (
-                first.get(
-                    "image"
-                )
-            )
-
-            username = (
-                first.get(
-                    "username"
-                )
-            )
-
-            computer_name = (
-                first.get(
-                    "computer"
-                )
-            )
-
             result = (
                 CorrelationEngine
                 .analyze(
-                    events=(
-                        process_events
+                    events=process_events,
+
+                    username=first.get(
+                        "username"
                     ),
-                    username=username,
-                    computer=(
-                        computer_name
+
+                    computer=first.get(
+                        "computer"
                     ),
-                    process_guid=(
-                        process_guid
+
+                    process_guid=first.get(
+                        "process_guid"
                     ),
-                    process_id=(
-                        process_id
+
+                    process_id=first.get(
+                        "process_id"
                     ),
-                    process_image=(
-                        process_image
+
+                    process_image=first.get(
+                        "image"
+                    ),
+
+                    parent_process_guid=(
+                        first.get(
+                            "parent_process_guid"
+                        )
+                    ),
+
+                    parent_process_id=(
+                        first.get(
+                            "parent_process_id"
+                        )
+                    ),
+
+                    parent_image=first.get(
+                        "parent_image"
                     ),
                 )
             )
@@ -705,9 +1480,241 @@ class CorrelationService:
 
         return results
 
+    @classmethod
+    def create_incident_from_tree(
+        cls,
+        db: Session,
+        *,
+        process_guid: str,
+        computer: str | None = None,
+        window_minutes: int | None = None,
+    ):
+        result = cls.analyze_process_tree(
+            db=db,
+            process_guid=process_guid,
+            computer=computer,
+            window_minutes=window_minutes,
+        )
+
+        if result is None:
+            return None
+
+        if not result.detected:
+            return None
+
+        from app.modules.alert.service import (
+            AlertService,
+        )
+
+        alert = (
+            AlertService
+            .create_from_correlation(
+                db=db,
+                result=result,
+            )
+        )
+
+        if alert is None:
+            return None
+
+        from app.modules.incidents.service import (
+            IncidentService,
+        )
+
+        incident = (
+            IncidentService
+            .create_from_alert(
+                db=db,
+                alert=alert,
+            )
+        )
+
+        return {
+            "result": result,
+            "alert": alert,
+            "incident": incident,
+        }
+
+
+
+    @classmethod
+    def analyze_process_trees(
+        cls,
+        db: Session,
+        *,
+        computer: str | None = None,
+        window_minutes: int | None = None,
+    ) -> list[
+        CorrelationResult
+    ]:
+
+        events = (
+            cls.get_recent_events(
+                db=db,
+                computer=computer,
+                window_minutes=(
+                    window_minutes
+                ),
+            )
+        )
+
+        nodes = (
+            cls._build_process_tree(
+                events
+            )
+        )
+
+        if not nodes:
+            return []
+
+        # =========================
+        # IDENTIFY TREE ROOTS
+        # =========================
+
+        root_guids: list[str] = []
+
+        for (
+            guid,
+            node,
+        ) in nodes.items():
+
+            parent_guid = (
+                cls._normalize_guid(
+                    node.get(
+                        "parent_process_guid"
+                    )
+                )
+            )
+
+            # Root when:
+            # - no known parent
+            # - or parent exists in metadata
+            #   but is outside current window
+            if (
+                not parent_guid
+                or parent_guid
+                not in nodes
+            ):
+
+                root_guids.append(
+                    guid
+                )
+
+        # Fallback for malformed/cyclic
+        # data where no explicit root exists.
+        if not root_guids:
+
+            root_guids = list(
+                nodes.keys()
+            )
+
+        results: list[
+            CorrelationResult
+        ] = []
+
+        processed_guids: set[str] = set()
+
+        # =========================
+        # ANALYZE EACH TREE
+        # =========================
+
+        for root_guid in root_guids:
+
+            if (
+                root_guid
+                in processed_guids
+            ):
+                continue
+
+            descendants = (
+                cls._collect_descendants(
+                    root_guid,
+                    nodes,
+                )
+            )
+
+            tree_guids = [
+                root_guid,
+                *descendants,
+            ]
+
+            for guid in tree_guids:
+
+                processed_guids.add(
+                    guid
+                )
+
+            result = (
+                cls.analyze_process_tree(
+                    db=db,
+                    process_guid=(
+                        root_guid
+                    ),
+                    computer=computer,
+                    window_minutes=(
+                        window_minutes
+                    ),
+                )
+            )
+
+            if result is None:
+                continue
+
+            results.append(
+                result
+            )
+
+        # =========================
+        # HANDLE ORPHAN NODES
+        # =========================
+
+        for guid in nodes:
+
+            if guid in processed_guids:
+                continue
+
+            result = (
+                cls.analyze_process_tree(
+                    db=db,
+                    process_guid=guid,
+                    computer=computer,
+                    window_minutes=(
+                        window_minutes
+                    ),
+                )
+            )
+
+            if result is None:
+                continue
+
+            results.append(
+                result
+            )
+
+        # =========================
+        # RANK
+        # =========================
+
+        results.sort(
+            key=lambda item:
+                (
+                    item.score,
+                    len(
+                        item.process_chain
+                    ),
+                    len(
+                        set(
+                            item.event_ids
+                        )
+                    ),
+                ),
+            reverse=True,
+        )
+
+        return results
+
     # =========================
-    # MANUAL BATCH PROCESSING
-    # KEEP FOR POST ENDPOINT
+    # BATCH PERSISTENCE
     # =========================
 
     @classmethod
@@ -749,6 +1756,7 @@ class CorrelationService:
             )
 
             if alert:
+
                 alerts.append(
                     alert
                 )

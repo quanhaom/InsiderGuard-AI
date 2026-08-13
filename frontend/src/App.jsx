@@ -3,9 +3,10 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
-
+import CorrelationDetail
+  from "./pages/CorrelationDetail";
 import BehaviorCorrelation from "./pages/BehaviorCorrelation";
-
+import Correlation from "./pages/Correlation";
 import UserDetail from "./pages/UserDetail";
 import Users from "./pages/Users";
 import AppLayout from "./components/AppLayout";
@@ -56,7 +57,7 @@ function App() {
           <Route
             path="/events"
             element={<Events />}
-          />
+          /> 
 
           <Route
             path="/events/:id"
@@ -68,6 +69,11 @@ function App() {
             element={
               <BehaviorCorrelation />
             }
+          />
+
+          <Route
+              path="/correlation/:processGuid"
+              element={<CorrelationDetail />}
           />
 
           <Route
