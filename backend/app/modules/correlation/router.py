@@ -28,12 +28,12 @@ router = APIRouter(
 # SERIALIZER
 # =========================
 
-
 def serialize_result(
     item,
     *,
     include_events: bool = True,
 ):
+
     result = {
         "detected":
             item.detected,
@@ -94,9 +94,8 @@ def serialize_result(
 
 
 # =========================
-# PROCESS CORRELATIONS
+# SAME-PROCESS VIEW
 # =========================
-
 
 @router.get(
     "/processes"
@@ -105,15 +104,18 @@ def get_process_correlations(
     computer: str | None = Query(
         default=None,
     ),
+
     window_minutes: int = Query(
         default=10,
         ge=1,
         le=1440,
     ),
+
     db: Session = Depends(
         get_db
     ),
 ):
+
     results = (
         CorrelationService
         .analyze_processes(
@@ -129,75 +131,55 @@ def get_process_correlations(
         serialize_result(
             item
         )
-        for item in results
+        for item
+        in results
     ]
 
 
 # =========================
-# TOP
+# TREE RANKING
 # =========================
 
+@router.get(
+    "/top"
+)
+def get_top_correlations(
+    limit: int = Query(
+        default=10,
+        ge=1,
+        le=100,
+    ),
 
-    @router.get(
-        "/top"
-    )
-    def get_top_correlations(
-        limit: int = Query(
-            default=10,
-            ge=1,
-            le=100,
-        ),
-        computer: str | None = Query(
-            default=None,
-        ),
-        window_minutes: int = Query(
-            default=60,
-            ge=1,
-            le=1440,
-        ),
-        db: Session = Depends(
-            get_db
-        ),
-    ):
+    computer: str | None = Query(
+        default=None,
+    ),
 
-        results = (
-            CorrelationService
-            .analyze_process_trees(
-                db=db,
-                computer=computer,
-                window_minutes=(
-                    window_minutes
-                ),
-            )
-        )
+    window_minutes: int = Query(
+        default=60,
+        ge=1,
+        le=1440,
+    ),
 
-        detected_results = [
-            item
-            for item in results
-            if item.detected
-        ]
+    db: Session = Depends(
+        get_db
+    ),
+):
 
-        return [
-            serialize_result(
-                item,
-                include_events=False,
-            )
-            for item
-            in detected_results[:limit]
-        ]
     results = (
         CorrelationService
-        .analyze_processes(
+        .analyze_process_trees(
             db=db,
+            computer=computer,
             window_minutes=(
                 window_minutes
             ),
         )
     )
 
-    detected_results = [
+    detected = [
         item
-        for item in results
+        for item
+        in results
         if item.detected
     ]
 
@@ -207,78 +189,56 @@ def get_process_correlations(
             include_events=False,
         )
         for item
-        in detected_results[
-            :limit
-        ]
+        in detected[:limit]
     ]
 
 
 # =========================
-# SINGLE PROCESS
+# TREE LIST
 # =========================
 
-
 @router.get(
-    "/process/{process_guid}"
+    "/trees"
 )
-def get_process_correlation(
-    process_guid: str,
+def get_tree_correlations(
+    computer: str | None = Query(
+        default=None,
+    ),
+
     window_minutes: int = Query(
         default=60,
         ge=1,
         le=1440,
     ),
+
     db: Session = Depends(
         get_db
     ),
 ):
+
     results = (
         CorrelationService
-        .analyze_processes(
+        .analyze_process_trees(
             db=db,
+            computer=computer,
             window_minutes=(
                 window_minutes
             ),
         )
     )
 
-    normalized_guid = (
-        process_guid
-        .strip()
-        .lower()
-    )
-
-    for item in results:
-
-        if not item.process_guid:
-            continue
-
-        if (
-            item.process_guid
-            .strip()
-            .lower()
-            == normalized_guid
-        ):
-
-            return (
-                serialize_result(
-                    item
-                )
-            )
-
-    raise HTTPException(
-        status_code=404,
-        detail=(
-            "Process correlation "
-            "not found"
-        ),
-    )
+    return [
+        serialize_result(
+            item
+        )
+        for item
+        in results
+    ]
 
 
 # =========================
-# PROCESS TREE
+# RAW PROCESS TREE
 # =========================
-
 
 @router.get(
     "/tree"
@@ -287,15 +247,18 @@ def get_process_tree(
     computer: str | None = Query(
         default=None,
     ),
+
     window_minutes: int = Query(
         default=60,
         ge=1,
         le=1440,
     ),
+
     db: Session = Depends(
         get_db
     ),
 ):
+
     return (
         CorrelationService
         .get_process_tree(
@@ -309,31 +272,41 @@ def get_process_tree(
 
 
 # =========================
-# TREE CORRELATION
+# TREE DETAIL
 # =========================
-
 
 @router.get(
     "/tree/{process_guid}"
 )
 def get_tree_correlation(
     process_guid: str,
+
     window_minutes: int = Query(
         default=60,
         ge=1,
         le=1440,
     ),
+
+    computer: str | None = Query(
+        default=None,
+    ),
+
     db: Session = Depends(
         get_db
     ),
 ):
+
     result = (
         CorrelationService
         .analyze_process_tree(
             db=db,
+
             process_guid=(
                 process_guid
             ),
+
+            computer=computer,
+
             window_minutes=(
                 window_minutes
             ),
@@ -344,6 +317,7 @@ def get_tree_correlation(
 
         raise HTTPException(
             status_code=404,
+
             detail=(
                 "Process tree "
                 "correlation not found"
@@ -358,55 +332,81 @@ def get_tree_correlation(
 
 
 # =========================
-# MANUAL BATCH PROCESSING
+# CREATE INCIDENT
 # =========================
+
 @router.post(
     "/tree/{process_guid}/incident"
 )
 def create_tree_incident(
     process_guid: str,
+
     computer: str | None = Query(
         default=None,
     ),
+
     window_minutes: int = Query(
         default=60,
         ge=1,
         le=1440,
     ),
+
     db: Session = Depends(
         get_db
     ),
 ):
+
     created = (
         CorrelationService
         .create_incident_from_tree(
             db=db,
-            process_guid=process_guid,
+
+            process_guid=(
+                process_guid
+            ),
+
             computer=computer,
-            window_minutes=window_minutes,
+
+            window_minutes=(
+                window_minutes
+            ),
         )
     )
 
     if created is None:
+
         raise HTTPException(
             status_code=400,
+
             detail=(
                 "Correlation did not "
-                "produce an incident"
+                "produce an alert"
             ),
         )
 
-    alert = created[
-        "alert"
-    ]
+    result = (
+        created[
+            "result"
+        ]
+    )
 
-    incident = created[
-        "incident"
-    ]
+    alert = (
+        created[
+            "alert"
+        ]
+    )
 
-    result = created[
-        "result"
-    ]
+    incident = (
+        created[
+            "incident"
+        ]
+    )
+
+    correlation_evidence = (
+        created.get(
+            "correlation_evidence"
+        )
+    )
 
     return {
         "correlation": {
@@ -463,7 +463,38 @@ def create_tree_incident(
                     incident.status,
             }
         ),
+
+        "evidence": (
+            None
+            if correlation_evidence
+            is None
+            else {
+                "id":
+                    correlation_evidence.id,
+
+                "incident_id":
+                    correlation_evidence
+                    .incident_id,
+
+                "evidence_type":
+                    correlation_evidence
+                    .evidence_type,
+
+                "sha256_hash":
+                    correlation_evidence
+                    .sha256_hash,
+
+                "created_at":
+                    correlation_evidence
+                    .created_at,
+            }
+        ),
     }
+
+
+# =========================
+# MANUAL SAME-PROCESS BATCH
+# =========================
 
 @router.post(
     "/process"
@@ -472,15 +503,18 @@ def process_correlations(
     computer: str | None = Query(
         default=None,
     ),
+
     window_minutes: int = Query(
         default=10,
         ge=1,
         le=1440,
     ),
+
     db: Session = Depends(
         get_db
     ),
 ):
+
     alerts = (
         CorrelationService
         .process_detections(
@@ -520,67 +554,41 @@ def process_correlations(
 
 
 # =========================
-# MANUAL TREE DETECTION
+# MANUAL TREE PERSIST
 # =========================
-
-
-
-@router.get(
-    "/trees"
-)
-def get_tree_correlations(
-    computer: str | None = Query(
-        default=None,
-    ),
-    window_minutes: int = Query(
-        default=60,
-        ge=1,
-        le=1440,
-    ),
-    db: Session = Depends(
-        get_db
-    ),
-):
-
-    results = (
-        CorrelationService
-        .analyze_process_trees(
-            db=db,
-            computer=computer,
-            window_minutes=(
-                window_minutes
-            ),
-        )
-    )
-
-    return [
-        serialize_result(
-            item
-        )
-        for item in results
-    ]
 
 @router.post(
     "/tree/{process_guid}/process"
 )
 def process_tree_correlation(
     process_guid: str,
+
+    computer: str | None = Query(
+        default=None,
+    ),
+
     window_minutes: int = Query(
         default=60,
         ge=1,
         le=1440,
     ),
+
     db: Session = Depends(
         get_db
     ),
 ):
+
     alert = (
         CorrelationService
         .process_tree_detection(
             db=db,
+
             process_guid=(
                 process_guid
             ),
+
+            computer=computer,
+
             window_minutes=(
                 window_minutes
             ),

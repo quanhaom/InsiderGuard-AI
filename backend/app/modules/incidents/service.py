@@ -2,47 +2,52 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.models.alert import Alert
-from app.models.incident import Incident
+from app.models.alert import (
+    Alert,
+)
+
+from app.models.incident import (
+    Incident,
+)
 
 from app.modules.incidents.timeline_service import (
-    IncidentTimelineService
+    IncidentTimelineService,
 )
 
 from app.modules.evidence.service import (
     EvidenceService,
 )
 
-from app.modules.blockchain.service import (
-    BlockchainService,
-)
-
-
 
 class IncidentService:
 
+    # =========================
+    # CREATE FROM ALERT
+    # =========================
 
     @staticmethod
     def create_from_alert(
         db: Session,
-        alert: Alert
+        alert: Alert,
     ):
 
+        # Only HIGH / CRITICAL
+        # alerts become incidents.
 
-        # Chỉ tạo incident cho HIGH/CRITICAL
-
-        if alert.severity not in [
+        if alert.severity not in {
             "HIGH",
             "CRITICAL",
-        ]:
+        }:
             return None
 
-
-
-        # tránh duplicate incident
+        # =========================
+        # DEDUP
+        # =========================
 
         existing = (
-            db.query(Incident)
+            db.query(
+                Incident
+            )
             .filter(
                 Incident.alert_id
                 == alert.id
@@ -50,34 +55,35 @@ class IncidentService:
             .first()
         )
 
-
         if existing:
-
             return existing
 
-
-
+        # =========================
+        # CREATE INCIDENT
+        # =========================
 
         incident = Incident(
-
             alert_id=alert.id,
 
-            username=alert.username,
+            username=(
+                alert.username
+            ),
 
             title=(
                 "Suspicious user "
                 "behavior detected"
             ),
 
-            severity=alert.severity,
+            severity=(
+                alert.severity
+            ),
 
             status="OPEN",
 
-            description=alert.reason
-
+            description=(
+                alert.reason
+            ),
         )
-
-
 
         db.add(
             incident
@@ -89,324 +95,267 @@ class IncidentService:
             incident
         )
 
-
-
-
-        # ==============================
-        # SOC AUDIT EVENT
-        # INCIDENT CREATED
-        # ==============================
+        # =========================
+        # AUDIT EVENT
+        # =========================
 
         IncidentTimelineService.create_event(
-
             db=db,
 
-            incident_id=incident.id,
+            incident_id=(
+                incident.id
+            ),
 
-            event_type="INCIDENT_CREATED",
+            event_type=(
+                "INCIDENT_CREATED"
+            ),
 
             actor_type="SYSTEM",
 
-            description=
-            "Incident created from security alert",
+            description=(
+                "Incident created "
+                "from security alert"
+            ),
 
             event_metadata={
+                "alert_id":
+                    alert.id,
 
-                "alert_id": alert.id,
+                "severity":
+                    alert.severity,
 
-                "severity": alert.severity,
-
-                "risk_score": alert.risk_score
-
-            }
-
+                "risk_score":
+                    alert.risk_score,
+            },
         )
 
-
-
-
+        # =========================
+        # INCIDENT SNAPSHOT
+        # =========================
 
         snapshot = {
+            "snapshot_type":
+                "INCIDENT_SNAPSHOT",
 
             "incident_id":
                 incident.id,
 
-
             "username":
                 incident.username,
-
 
             "alert_id":
                 alert.id,
 
+            "alert_type":
+                alert.alert_type,
 
             "severity":
                 alert.severity,
 
-
             "risk_score":
                 alert.risk_score,
-
 
             "reason":
                 alert.reason,
 
+            "status":
+                incident.status,
 
             "created_at":
                 datetime.utcnow()
-                .isoformat()
-
+                .isoformat(),
         }
 
+        EvidenceService.create_snapshot(
+            db=db,
 
+            incident_id=(
+                incident.id
+            ),
 
+            username=(
+                incident.username
+                or "UNKNOWN"
+            ),
 
+            snapshot=snapshot,
 
-        evidence = (
-
-            EvidenceService
-            .create_snapshot(
-
-                db=db,
-
-                incident_id=incident.id,
-
-                username=incident.username,
-
-                snapshot=snapshot
-
-            )
-
+            evidence_type=(
+                "INCIDENT_SNAPSHOT"
+            ),
         )
-
-
-
-
-
-        # ==============================
-        # BLOCKCHAIN SEAL
-        # ==============================
-
-        if evidence:
-
-
-            BlockchainService.create_block(
-
-                db=db,
-
-                evidence_id=evidence.id,
-
-                evidence_hash=evidence.sha256_hash
-
-            )
-
-
-
 
         return incident
 
-
-
-
+    # =========================
+    # ALL INCIDENTS
+    # =========================
 
     @staticmethod
     def get_all_incidents(
-        db: Session
+        db: Session,
     ):
 
         return (
-
-            db.query(Incident)
-
-            .order_by(
-                Incident.created_at.desc()
+            db.query(
+                Incident
             )
-
+            .order_by(
+                Incident
+                .created_at
+                .desc()
+            )
             .all()
-
         )
 
-
-
-
+    # =========================
+    # USER INCIDENTS
+    # =========================
 
     @staticmethod
     def get_user_incidents(
         db: Session,
-        username: str
+        username: str,
     ):
 
-
         return (
-
-            db.query(Incident)
-
+            db.query(
+                Incident
+            )
             .filter(
                 Incident.username
-                ==
-                username
+                == username
             )
-
             .order_by(
-                Incident.created_at.desc()
+                Incident
+                .created_at
+                .desc()
             )
-
             .all()
-
         )
 
-
-
-
+    # =========================
+    # SINGLE INCIDENT
+    # =========================
 
     @staticmethod
     def get_incident(
         db: Session,
-        incident_id: int
+        incident_id: int,
     ):
 
-
         return (
-
-            db.query(Incident)
-
+            db.query(
+                Incident
+            )
             .filter(
                 Incident.id
-                ==
-                incident_id
+                == incident_id
             )
-
             .first()
-
         )
 
-
-
-
+    # =========================
+    # UPDATE STATUS
+    # =========================
 
     @staticmethod
     def update_status(
         db: Session,
         incident: Incident,
-        new_status: str
+        new_status: str,
     ):
 
-
-        allowed_statuses = [
-
+        allowed_statuses = {
             "OPEN",
-
             "INVESTIGATING",
-
             "RESOLVED",
-
             "CLOSED",
+        }
 
-        ]
-
-
-
-        if new_status not in allowed_statuses:
-
+        if (
+            new_status
+            not in allowed_statuses
+        ):
             raise ValueError(
                 "Invalid incident status"
             )
 
+        old_status = (
+            incident.status
+        )
 
-
-        old_status = incident.status
-
-
-
-
-        # không tạo audit nếu không đổi
-
-        if old_status == new_status:
-
+        if (
+            old_status
+            == new_status
+        ):
             return incident
 
+        incident.status = (
+            new_status
+        )
 
-
-
-
-        incident.status = new_status
-
-
-
-
-        if new_status == "CLOSED":
-
+        if (
+            new_status
+            == "CLOSED"
+        ):
             incident.closed_at = (
-
                 datetime.utcnow()
-
             )
 
         else:
-
-            incident.closed_at = None
-
-
-
-
-
+            incident.closed_at = (
+                None
+            )
 
         db.commit()
-
 
         db.refresh(
             incident
         )
 
-
-
-
-
-        # ==============================
-        # SOC AUDIT EVENT
-        # STATUS CHANGED
-        # ==============================
+        # =========================
+        # AUDIT EVENT
+        # =========================
 
         IncidentTimelineService.create_event(
-
             db=db,
 
-            incident_id=incident.id,
+            incident_id=(
+                incident.id
+            ),
 
-            event_type="STATUS_CHANGED",
+            event_type=(
+                "STATUS_CHANGED"
+            ),
 
             actor_type="ANALYST",
 
-            actor_name="security_admin",
-
-            description=(
-
-                f"Status changed "
-                f"{old_status} -> {new_status}"
-
+            actor_name=(
+                "security_admin"
             ),
 
+            description=(
+                f"Status changed "
+                f"{old_status} "
+                f"-> {new_status}"
+            ),
 
-            old_status=old_status,
+            old_status=(
+                old_status
+            ),
 
-
-            new_status=new_status,
-
+            new_status=(
+                new_status
+            ),
 
             event_metadata={
-
                 "previous_status":
                     old_status,
 
-
                 "new_status":
-                    new_status
-
-            }
-
+                    new_status,
+            },
         )
-
-
-
 
         return incident
