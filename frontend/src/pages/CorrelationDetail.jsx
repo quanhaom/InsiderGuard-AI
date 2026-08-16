@@ -1455,6 +1455,424 @@ function CorrelationDetail() {
 
       </section>
 
+      {/* =====================
+          USB ACTIVITY
+      ====================== */}
+
+      <section className="investigation-panel">
+
+        <div className="usb-section-header">
+
+          <div>
+            <h3>
+              USB Activity
+            </h3>
+
+            <p>
+              Removable media activity
+              associated with this
+              correlation window.
+            </p>
+          </div>
+
+          <span className="usb-risk-badge">
+            Possible Exfiltration
+          </span>
+
+        </div>
+
+
+        {
+          (
+            !Array.isArray(
+              correlation.usb_events
+            )
+            || correlation
+              .usb_events
+              .length === 0
+          )
+          &&
+          (
+            !Array.isArray(
+              correlation
+                .usb_file_transfers
+            )
+            || correlation
+              .usb_file_transfers
+              .length === 0
+          )
+          ? (
+
+            <div className="detail-muted">
+              No USB activity detected
+              in this correlation window.
+            </div>
+
+          )
+          : (
+
+            <>
+              <div className="usb-summary-grid">
+
+                <div>
+                  <span>
+                    Device Events
+                  </span>
+
+                  <strong>
+                    {
+                      correlation
+                        .usb_events
+                        ?.length
+                      || 0
+                    }
+                  </strong>
+                </div>
+
+
+                <div>
+                  <span>
+                    File Transfers
+                  </span>
+
+                  <strong>
+                    {
+                      correlation
+                        .usb_file_transfers
+                        ?.length
+                      || 0
+                    }
+                  </strong>
+                </div>
+
+
+                <div>
+                  <span>
+                    Highest File Risk
+                  </span>
+
+                  <strong>
+                    {
+                      Math.max(
+                        0,
+                        ...(
+                          correlation
+                            .usb_file_transfers
+                          || []
+                        ).map(
+                          item =>
+                            Number(
+                              item.risk_score
+                              || 0
+                            )
+                        )
+                      )
+                    }
+                  </strong>
+                </div>
+
+              </div>
+
+
+              {
+                Array.isArray(
+                  correlation
+                    .usb_events
+                )
+                &&
+                correlation
+                  .usb_events
+                  .length > 0
+                && (
+
+                  <div className="usb-subsection">
+
+                    <h4>
+                      Device Timeline
+                    </h4>
+
+                    <div className="usb-device-list">
+
+                      {
+                        correlation
+                          .usb_events
+                          .map(
+                            (
+                              event,
+                              index
+                            ) => (
+
+                              <div
+                                className="usb-device-item"
+                                key={
+                                  event.id
+                                  || index
+                                }
+                              >
+
+                                <div>
+
+                                  <strong>
+                                    {
+                                      event
+                                        .event_type
+                                    }
+                                  </strong>
+
+                                  <span>
+                                    Drive {
+                                      event
+                                        .drive_letter
+                                      || "-"
+                                    }
+                                  </span>
+
+                                </div>
+
+
+                                <div>
+
+                                  <span>
+                                    Label
+                                  </span>
+
+                                  <strong>
+                                    {
+                                      event
+                                        .volume_label
+                                      || "Unknown"
+                                    }
+                                  </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                  <span>
+                                    Serial
+                                  </span>
+
+                                  <code>
+                                    {
+                                      event
+                                        .serial_number
+                                      || "-"
+                                    }
+                                  </code>
+
+                                </div>
+
+
+                                <time>
+                                  {
+                                    event
+                                      .created_at
+                                    || "-"
+                                  }
+                                </time>
+
+                              </div>
+
+                            )
+                          )
+                      }
+
+                    </div>
+
+                  </div>
+
+                )
+              }
+
+
+              {
+                Array.isArray(
+                  correlation
+                    .usb_file_transfers
+                )
+                &&
+                correlation
+                  .usb_file_transfers
+                  .length > 0
+                && (
+
+                  <div className="usb-subsection">
+
+                    <h4>
+                      Files Written to USB
+                    </h4>
+
+                    <div className="usb-file-list">
+
+                      {
+                        correlation
+                          .usb_file_transfers
+                          .map(
+                            (
+                              transfer,
+                              index
+                            ) => (
+
+                              <div
+                                className="usb-file-card"
+                                key={
+                                  transfer.id
+                                  || index
+                                }
+                              >
+
+                                <div className="usb-file-header">
+
+                                  <div>
+
+                                    <strong>
+                                      {
+                                        transfer
+                                          .file_name
+                                        || "Unknown file"
+                                      }
+                                    </strong>
+
+                                    <span>
+                                      {
+                                        transfer
+                                          .file_path
+                                      }
+                                    </span>
+
+                                  </div>
+
+
+                                  <span
+                                    className={
+                                      "usb-file-severity "
+                                      + severityClass(
+                                        transfer
+                                          .severity
+                                      )
+                                    }
+                                  >
+                                    {
+                                      transfer
+                                        .severity
+                                      || "LOW"
+                                    }
+                                  </span>
+
+                                </div>
+
+
+                                <div className="usb-file-meta">
+
+                                  <div>
+
+                                    <span>
+                                      Drive
+                                    </span>
+
+                                    <strong>
+                                      {
+                                        transfer
+                                          .drive_letter
+                                        || "-"
+                                      }
+                                    </strong>
+
+                                  </div>
+
+
+                                  <div>
+
+                                    <span>
+                                      Size
+                                    </span>
+
+                                    <strong>
+                                      {
+                                        transfer
+                                          .file_size
+                                        ?? "-"
+                                      }
+                                      {" bytes"}
+                                    </strong>
+
+                                  </div>
+
+
+                                  <div>
+
+                                    <span>
+                                      Extension
+                                    </span>
+
+                                    <strong>
+                                      {
+                                        transfer
+                                          .extension
+                                        || "-"
+                                      }
+                                    </strong>
+
+                                  </div>
+
+
+                                  <div>
+
+                                    <span>
+                                      Risk
+                                    </span>
+
+                                    <strong>
+                                      {
+                                        transfer
+                                          .risk_score
+                                        ?? 0
+                                      }
+                                    </strong>
+
+                                  </div>
+
+                                </div>
+
+
+                                <div className="usb-file-hash">
+
+                                  <span>
+                                    SHA-256
+                                  </span>
+
+                                  <code>
+                                    {
+                                      transfer
+                                        .sha256_hash
+                                      || "Not available"
+                                    }
+                                  </code>
+
+                                </div>
+
+                              </div>
+
+                            )
+                          )
+                      }
+
+                    </div>
+
+                  </div>
+
+                )
+              }
+
+            </>
+
+          )
+        }
+
+      </section>
+
+
 
       {/* =====================
           MITRE + REASONS

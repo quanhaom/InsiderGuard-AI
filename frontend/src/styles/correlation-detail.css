@@ -968,3 +968,340 @@
   }
 
 }
+
+
+/* =========================
+   USB ACTIVITY
+========================= */
+
+.usb-section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.usb-section-header h3 {
+  margin-bottom: 6px;
+}
+
+.usb-section-header p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.usb-risk-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+
+  background:
+    rgba(
+      255,
+      120,
+      80,
+      0.15
+    );
+
+  border:
+    1px solid
+    rgba(
+      255,
+      120,
+      80,
+      0.25
+    );
+}
+
+.usb-summary-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.usb-summary-grid > div {
+  padding: 13px;
+  border-radius: 9px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.035
+    );
+}
+
+.usb-summary-grid span {
+  display: block;
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+.usb-summary-grid strong {
+  display: block;
+  margin-top: 5px;
+}
+
+.usb-subsection {
+  margin-top: 22px;
+}
+
+.usb-subsection h4 {
+  margin-bottom: 12px;
+}
+
+.usb-device-list,
+.usb-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.usb-device-item {
+  display: grid;
+  grid-template-columns:
+    1.4fr
+    1fr
+    1fr
+    auto;
+
+  gap: 12px;
+  align-items: center;
+
+  padding: 13px;
+
+  border-radius: 9px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.03
+    );
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.06
+    );
+}
+
+.usb-device-item strong,
+.usb-device-item span,
+.usb-device-item code {
+  display: block;
+}
+
+.usb-device-item span,
+.usb-device-item time {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.usb-device-item code {
+  margin-top: 4px;
+  font-size: 10px;
+  word-break: break-all;
+}
+
+.usb-file-card {
+  padding: 14px;
+
+  border-radius: 10px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.035
+    );
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.07
+    );
+}
+
+.usb-file-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.usb-file-header strong,
+.usb-file-header span {
+  display: block;
+}
+
+.usb-file-header > div > span {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.55;
+  overflow-wrap: anywhere;
+}
+
+.usb-file-severity {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.usb-file-severity.low {
+  background:
+    rgba(
+      80,
+      180,
+      120,
+      0.15
+    );
+}
+
+.usb-file-severity.medium {
+  background:
+    rgba(
+      255,
+      200,
+      70,
+      0.18
+    );
+}
+
+.usb-file-severity.high {
+  background:
+    rgba(
+      255,
+      140,
+      40,
+      0.2
+    );
+}
+
+.usb-file-severity.critical {
+  background:
+    rgba(
+      255,
+      70,
+      70,
+      0.2
+    );
+}
+
+.usb-file-meta {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.usb-file-meta span {
+  display: block;
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.usb-file-meta strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.usb-file-hash {
+  margin-top: 12px;
+  padding: 10px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      0.15
+    );
+}
+
+.usb-file-hash span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.usb-file-hash code {
+  font-size: 10px;
+  word-break: break-all;
+}
+
+@media (
+  max-width: 800px
+) {
+
+  .usb-summary-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .usb-device-item {
+    grid-template-columns:
+      1fr;
+  }
+
+  .usb-file-meta {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+}
+
+@media (
+  max-width: 600px
+) {
+
+  .usb-section-header,
+  .usb-file-header {
+    flex-direction:
+      column;
+  }
+
+  .usb-file-meta {
+    grid-template-columns:
+      1fr;
+  }
+
+}
