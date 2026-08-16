@@ -5,7 +5,9 @@ from fastapi import (
     Query,
 )
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import (
+    Session,
+)
 
 from app.db.session import (
     get_db,
@@ -23,10 +25,6 @@ router = APIRouter(
     ],
 )
 
-
-# =========================
-# SERIALIZER
-# =========================
 
 def serialize_result(
     item,
@@ -77,6 +75,12 @@ def serialize_result(
         "event_ids":
             item.event_ids,
 
+        "usb_events":
+            item.usb_events,
+
+        "usb_file_transfers":
+            item.usb_file_transfers,
+
         "reasons":
             item.reasons,
 
@@ -92,10 +96,6 @@ def serialize_result(
 
     return result
 
-
-# =========================
-# SAME-PROCESS VIEW
-# =========================
 
 @router.get(
     "/processes"
@@ -120,7 +120,11 @@ def get_process_correlations(
         CorrelationService
         .analyze_processes(
             db=db,
-            computer=computer,
+
+            computer=(
+                computer
+            ),
+
             window_minutes=(
                 window_minutes
             ),
@@ -135,10 +139,6 @@ def get_process_correlations(
         in results
     ]
 
-
-# =========================
-# TREE RANKING
-# =========================
 
 @router.get(
     "/top"
@@ -169,14 +169,18 @@ def get_top_correlations(
         CorrelationService
         .analyze_process_trees(
             db=db,
-            computer=computer,
+
+            computer=(
+                computer
+            ),
+
             window_minutes=(
                 window_minutes
             ),
         )
     )
 
-    detected = [
+    detected_results = [
         item
         for item
         in results
@@ -189,13 +193,11 @@ def get_top_correlations(
             include_events=False,
         )
         for item
-        in detected[:limit]
+        in detected_results[
+            :limit
+        ]
     ]
 
-
-# =========================
-# TREE LIST
-# =========================
 
 @router.get(
     "/trees"
@@ -220,7 +222,11 @@ def get_tree_correlations(
         CorrelationService
         .analyze_process_trees(
             db=db,
-            computer=computer,
+
+            computer=(
+                computer
+            ),
+
             window_minutes=(
                 window_minutes
             ),
@@ -235,10 +241,6 @@ def get_tree_correlations(
         in results
     ]
 
-
-# =========================
-# RAW PROCESS TREE
-# =========================
 
 @router.get(
     "/tree"
@@ -263,7 +265,11 @@ def get_process_tree(
         CorrelationService
         .get_process_tree(
             db=db,
-            computer=computer,
+
+            computer=(
+                computer
+            ),
+
             window_minutes=(
                 window_minutes
             ),
@@ -271,24 +277,20 @@ def get_process_tree(
     )
 
 
-# =========================
-# TREE DETAIL
-# =========================
-
 @router.get(
     "/tree/{process_guid}"
 )
 def get_tree_correlation(
     process_guid: str,
 
+    computer: str | None = Query(
+        default=None,
+    ),
+
     window_minutes: int = Query(
         default=60,
         ge=1,
         le=1440,
-    ),
-
-    computer: str | None = Query(
-        default=None,
     ),
 
     db: Session = Depends(
@@ -305,7 +307,9 @@ def get_tree_correlation(
                 process_guid
             ),
 
-            computer=computer,
+            computer=(
+                computer
+            ),
 
             window_minutes=(
                 window_minutes
@@ -330,10 +334,6 @@ def get_tree_correlation(
         )
     )
 
-
-# =========================
-# CREATE INCIDENT
-# =========================
 
 @router.post(
     "/tree/{process_guid}/incident"
@@ -365,7 +365,9 @@ def create_tree_incident(
                 process_guid
             ),
 
-            computer=computer,
+            computer=(
+                computer
+            ),
 
             window_minutes=(
                 window_minutes
@@ -402,7 +404,7 @@ def create_tree_incident(
         ]
     )
 
-    correlation_evidence = (
+    evidence = (
         created.get(
             "correlation_evidence"
         )
@@ -424,6 +426,12 @@ def create_tree_incident(
 
             "event_ids":
                 result.event_ids,
+
+            "usb_events":
+                result.usb_events,
+
+            "usb_file_transfers":
+                result.usb_file_transfers,
 
             "mitre_techniques":
                 result.mitre_techniques,
@@ -466,35 +474,26 @@ def create_tree_incident(
 
         "evidence": (
             None
-            if correlation_evidence
-            is None
+            if evidence is None
             else {
                 "id":
-                    correlation_evidence.id,
+                    evidence.id,
 
                 "incident_id":
-                    correlation_evidence
-                    .incident_id,
+                    evidence.incident_id,
 
                 "evidence_type":
-                    correlation_evidence
-                    .evidence_type,
+                    evidence.evidence_type,
 
                 "sha256_hash":
-                    correlation_evidence
-                    .sha256_hash,
+                    evidence.sha256_hash,
 
                 "created_at":
-                    correlation_evidence
-                    .created_at,
+                    evidence.created_at,
             }
         ),
     }
 
-
-# =========================
-# MANUAL SAME-PROCESS BATCH
-# =========================
 
 @router.post(
     "/process"
@@ -519,7 +518,11 @@ def process_correlations(
         CorrelationService
         .process_detections(
             db=db,
-            computer=computer,
+
+            computer=(
+                computer
+            ),
+
             window_minutes=(
                 window_minutes
             ),
@@ -553,10 +556,6 @@ def process_correlations(
     }
 
 
-# =========================
-# MANUAL TREE PERSIST
-# =========================
-
 @router.post(
     "/tree/{process_guid}/process"
 )
@@ -587,7 +586,9 @@ def process_tree_correlation(
                 process_guid
             ),
 
-            computer=computer,
+            computer=(
+                computer
+            ),
 
             window_minutes=(
                 window_minutes

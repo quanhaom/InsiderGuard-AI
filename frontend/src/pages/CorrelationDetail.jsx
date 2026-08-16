@@ -184,6 +184,16 @@ function CorrelationDetail() {
   ] = useState(null);
 
   const [
+    verifyingEvidence,
+    setVerifyingEvidence,
+  ] = useState(false);
+
+  const [
+    evidenceVerification,
+    setEvidenceVerification,
+  ] = useState(null);
+
+  const [
     error,
     setError,
   ] = useState("");
@@ -265,6 +275,8 @@ function CorrelationDetail() {
           );
 
           setError("");
+          setIncidentResult(null);
+          setEvidenceVerification(null);
 
           const response =
             await api.post(
@@ -276,8 +288,7 @@ function CorrelationDetail() {
               null,
               {
                 params: {
-                  window_minutes:
-                    60,
+                  window_minutes: 60,
                 },
               }
             );
@@ -312,6 +323,70 @@ function CorrelationDetail() {
       },
       [
         processGuid,
+      ]
+    );
+
+
+  // =========================
+  // VERIFY EVIDENCE
+  // =========================
+
+  const verifyEvidence =
+    useCallback(
+      async () => {
+        const evidenceId =
+          incidentResult
+            ?.evidence
+            ?.id;
+
+        if (!evidenceId) {
+          return;
+        }
+
+        try {
+          setVerifyingEvidence(
+            true
+          );
+
+          setError("");
+
+          const response =
+            await api.get(
+              `/evidence/${
+                evidenceId
+              }/verify`
+            );
+
+          setEvidenceVerification(
+            response.data
+          );
+
+        } catch (
+          requestError
+        ) {
+          console.error(
+            requestError
+          );
+
+          setError(
+            requestError
+              ?.response
+              ?.data
+              ?.detail
+            || (
+              "Could not verify "
+              + "evidence integrity."
+            )
+          );
+
+        } finally {
+          setVerifyingEvidence(
+            false
+          );
+        }
+      },
+      [
+        incidentResult,
       ]
     );
 
@@ -408,12 +483,10 @@ function CorrelationDetail() {
 
 
   // =========================
-  // ERROR
+  // NO CORRELATION
   // =========================
 
-  if (
-    !correlation
-  ) {
+  if (!correlation) {
     return (
       <div className="correlation-detail-page">
 
@@ -447,11 +520,9 @@ function CorrelationDetail() {
 
   const chain =
     Array.isArray(
-      correlation
-        .process_chain
+      correlation.process_chain
     )
-      ? correlation
-          .process_chain
+      ? correlation.process_chain
       : [];
 
   const reasons =
@@ -463,11 +534,9 @@ function CorrelationDetail() {
 
   const mitre =
     Array.isArray(
-      correlation
-        .mitre_techniques
+      correlation.mitre_techniques
     )
-      ? correlation
-          .mitre_techniques
+      ? correlation.mitre_techniques
       : [];
 
 
@@ -526,8 +595,7 @@ function CorrelationDetail() {
             className="detail-incident-button"
             disabled={
               creatingIncident
-              || !correlation
-                .detected
+              || !correlation.detected
             }
             onClick={
               createIncident
@@ -565,8 +633,7 @@ function CorrelationDetail() {
         <div className="incident-success-banner">
 
           {
-            incidentResult
-              .incident
+            incidentResult.incident
             ? (
 
               <div className="incident-result-content">
@@ -641,6 +708,229 @@ function CorrelationDetail() {
           }
 
         </div>
+
+      )}
+
+
+      {/* =====================
+          EVIDENCE
+      ====================== */}
+
+      {incidentResult?.evidence && (
+
+        <section className="investigation-panel">
+
+          <div className="evidence-header">
+
+            <div>
+
+              <h3>
+                Correlation Evidence
+              </h3>
+
+              <p>
+                Immutable forensic snapshot
+                captured when the incident
+                was created.
+              </p>
+
+            </div>
+
+
+            <span className="evidence-type-badge">
+
+              {
+                incidentResult
+                  .evidence
+                  .evidence_type
+              }
+
+            </span>
+
+          </div>
+
+
+          <div className="evidence-summary-grid">
+
+            <div>
+
+              <span>
+                Evidence ID
+              </span>
+
+              <strong>
+                #
+                {
+                  incidentResult
+                    .evidence
+                    .id
+                }
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Incident ID
+              </span>
+
+              <strong>
+                #
+                {
+                  incidentResult
+                    .evidence
+                    .incident_id
+                }
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Integrity
+              </span>
+
+              <strong
+                className={
+                  evidenceVerification
+                    ?.is_valid
+                    === true
+                    ? "integrity-valid"
+                    : (
+                      evidenceVerification
+                        ?.is_valid
+                        === false
+                        ? "integrity-invalid"
+                        : "integrity-pending"
+                    )
+                }
+              >
+                {
+                  evidenceVerification
+                    ?.is_valid
+                    === true
+                    ? "Verified"
+                    : (
+                      evidenceVerification
+                        ?.is_valid
+                        === false
+                        ? "Failed"
+                        : "SHA-256 sealed"
+                    )
+                }
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div className="evidence-hash">
+
+            <span>
+              SHA-256
+            </span>
+
+            <code>
+              {
+                incidentResult
+                  .evidence
+                  .sha256_hash
+              }
+            </code>
+
+          </div>
+
+
+          <div className="evidence-actions">
+
+            <button
+              type="button"
+              disabled={
+                verifyingEvidence
+              }
+              onClick={
+                verifyEvidence
+              }
+            >
+              {
+                verifyingEvidence
+                  ? "Verifying..."
+                  : "Verify Integrity"
+              }
+            </button>
+
+
+            <button
+              type="button"
+              onClick={
+                () =>
+                  navigate(
+                    `/evidences/${
+                      incidentResult
+                        .evidence
+                        .id
+                    }`
+                  )
+              }
+            >
+              Open Evidence
+            </button>
+
+          </div>
+
+
+          {evidenceVerification && (
+
+            <div
+              className={
+                evidenceVerification
+                  .is_valid
+                  ? (
+                    "evidence-verification "
+                    + "valid"
+                  )
+                  : (
+                    "evidence-verification "
+                    + "invalid"
+                  )
+              }
+            >
+
+              <strong>
+                {
+                  evidenceVerification
+                    .is_valid
+                    ? "Integrity Verified"
+                    : "Integrity Failure"
+                }
+              </strong>
+
+
+              <span>
+                {
+                  evidenceVerification
+                    .is_valid
+                    ? (
+                      "Stored and calculated "
+                      + "SHA-256 hashes match."
+                    )
+                    : (
+                      "Evidence content does "
+                      + "not match its stored hash."
+                    )
+                }
+              </span>
+
+            </div>
+
+          )}
+
+        </section>
 
       )}
 
@@ -802,8 +1092,7 @@ function CorrelationDetail() {
       ====================== */}
 
       {
-        correlation
-          .parent_image
+        correlation.parent_image
         && (
 
           <section className="investigation-panel">
@@ -907,8 +1196,7 @@ function CorrelationDetail() {
                         <strong>
                           {
                             processName(
-                              process
-                                .image
+                              process.image
                             )
                           }
                         </strong>
@@ -927,10 +1215,7 @@ function CorrelationDetail() {
                           {
                             process
                               .process_guid
-                            || (
-                              "No "
-                              + "ProcessGuid"
-                            )
+                            || "No ProcessGuid"
                           }
                         </code>
 
@@ -1083,8 +1368,7 @@ function CorrelationDetail() {
                       className="timeline-event"
                       key={
                         event.id
-                        || event
-                          .record_id
+                        || event.record_id
                         || index
                       }
                     >
@@ -1199,9 +1483,7 @@ function CorrelationDetail() {
               : (
 
                 mitre.map(
-                  (
-                    technique
-                  ) => (
+                  technique => (
 
                     <span
                       className="detail-mitre-tag"
@@ -1279,7 +1561,7 @@ function CorrelationDetail() {
 
 
       {/* =====================
-          RAW CORRELATION
+          RAW
       ====================== */}
 
       <section className="investigation-panel">

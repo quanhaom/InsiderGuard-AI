@@ -39,7 +39,9 @@ from app.modules.events.router import (
 from app.modules.incidents.router import (
     router as incidents_router,
 )
-
+from app.modules.usb.router import (
+    router as usb_router,
+)
 from app.modules.evidence.router import (
     router as evidence_router,
 )
@@ -130,6 +132,11 @@ app.include_router(
 
 app.include_router(
     events_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    usb_router,
     prefix="/api/v1",
 )
 

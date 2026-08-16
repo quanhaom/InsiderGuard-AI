@@ -1,4 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import (
+    dataclass,
+    field,
+)
+
 from typing import Any
 
 
@@ -39,6 +43,18 @@ class CorrelationResult:
 
     related_process_guids: list[
         str
+    ] = field(
+        default_factory=list
+    )
+
+    usb_events: list[
+        dict[str, Any]
+    ] = field(
+        default_factory=list
+    )
+
+    usb_file_transfers: list[
+        dict[str, Any]
     ] = field(
         default_factory=list
     )

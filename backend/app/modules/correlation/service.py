@@ -8,7 +8,9 @@ from datetime import (
 
 from typing import Any
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import (
+    Session,
+)
 
 from app.models.normalized_windows_event import (
     NormalizedWindowsEvent,
@@ -34,10 +36,6 @@ class CorrelationService:
         13,
         22,
     }
-
-    # =========================
-    # DETAILS
-    # =========================
 
     @staticmethod
     def _details_to_dict(
@@ -78,10 +76,6 @@ class CorrelationService:
 
         return {}
 
-    # =========================
-    # PID
-    # =========================
-
     @staticmethod
     def _normalize_pid(
         value,
@@ -104,10 +98,6 @@ class CorrelationService:
         ):
             return None
 
-    # =========================
-    # GUID
-    # =========================
-
     @staticmethod
     def _normalize_guid(
         value,
@@ -128,10 +118,6 @@ class CorrelationService:
             return None
 
         return normalized
-
-    # =========================
-    # SERIALIZE EVENT
-    # =========================
 
     @classmethod
     def _serialize_event(
@@ -255,14 +241,246 @@ class CorrelationService:
                 ),
         }
 
-    # =========================
-    # PROCESS KEY
-    # =========================
+    @staticmethod
+    def _serialize_usb_event(
+        event,
+    ) -> dict[str, Any]:
+
+        return {
+            "id":
+                event.id,
+
+            "computer":
+                event.computer,
+
+            "username":
+                event.username,
+
+            "event_type":
+                event.event_type,
+
+            "device_id":
+                event.device_id,
+
+            "drive_letter":
+                event.drive_letter,
+
+            "volume_label":
+                event.volume_label,
+
+            "serial_number":
+                event.serial_number,
+
+            "filesystem":
+                event.filesystem,
+
+            "created_at":
+                event.created_at,
+        }
+
+    @staticmethod
+    def _serialize_usb_transfer(
+        transfer,
+    ) -> dict[str, Any]:
+
+        return {
+            "id":
+                transfer.id,
+
+            "computer":
+                transfer.computer,
+
+            "username":
+                transfer.username,
+
+            "device_id":
+                transfer.device_id,
+
+            "drive_letter":
+                transfer.drive_letter,
+
+            "file_path":
+                transfer.file_path,
+
+            "file_name":
+                transfer.file_name,
+
+            "extension":
+                transfer.extension,
+
+            "file_size":
+                transfer.file_size,
+
+            "sha256_hash":
+                transfer.sha256_hash,
+
+            "risk_score":
+                transfer.risk_score,
+
+            "severity":
+                transfer.severity,
+
+            "created_at":
+                transfer.created_at,
+        }
+
+    @classmethod
+    def get_usb_context(
+        cls,
+        db: Session,
+        *,
+        computer: str | None,
+        username: str | None,
+        window_minutes: int,
+    ) -> tuple[
+        list[dict[str, Any]],
+        list[dict[str, Any]],
+    ]:
+
+        from app.modules.usb.service import (
+            UsbService,
+        )
+
+        from app.modules.usb.file_transfer_service import (
+            UsbFileTransferService,
+        )
+
+        usb_events_raw = (
+            UsbService
+            .get_recent_events(
+                db=db,
+                computer=computer,
+                window_minutes=(
+                    window_minutes
+                ),
+            )
+        )
+
+        usb_transfers_raw = (
+            UsbFileTransferService
+            .get_recent(
+                db=db,
+                computer=computer,
+                limit=500,
+            )
+        )
+
+        normalized_username = (
+            str(
+                username
+                or ""
+            )
+            .strip()
+            .lower()
+        )
+
+        usb_events = []
+
+        for event in usb_events_raw:
+
+            if normalized_username:
+
+                event_username = (
+                    str(
+                        event.username
+                        or ""
+                    )
+                    .strip()
+                    .lower()
+                )
+
+                if (
+                    event_username
+                    and event_username
+                    != normalized_username
+                ):
+                    continue
+
+            usb_events.append(
+                cls._serialize_usb_event(
+                    event
+                )
+            )
+
+        cutoff = (
+            datetime.now(
+                timezone.utc
+            )
+            - timedelta(
+                minutes=(
+                    window_minutes
+                )
+            )
+        )
+
+        usb_file_transfers = []
+
+        for transfer in usb_transfers_raw:
+
+            created_at = (
+                transfer.created_at
+            )
+
+            if (
+                created_at
+                is not None
+            ):
+
+                if (
+                    created_at.tzinfo
+                    is None
+                ):
+                    created_at = (
+                        created_at
+                        .replace(
+                            tzinfo=(
+                                timezone.utc
+                            )
+                        )
+                    )
+
+                if (
+                    created_at
+                    < cutoff
+                ):
+                    continue
+
+            if normalized_username:
+
+                transfer_username = (
+                    str(
+                        transfer.username
+                        or ""
+                    )
+                    .strip()
+                    .lower()
+                )
+
+                if (
+                    transfer_username
+                    and transfer_username
+                    != normalized_username
+                ):
+                    continue
+
+            usb_file_transfers.append(
+                cls._serialize_usb_transfer(
+                    transfer
+                )
+            )
+
+        return (
+            usb_events,
+            usb_file_transfers,
+        )
 
     @classmethod
     def _process_key(
         cls,
-        event: dict[str, Any],
+        event: dict[
+            str,
+            Any,
+        ],
     ) -> tuple:
 
         process_guid = (
@@ -305,10 +523,6 @@ class CorrelationService:
             process_id,
         )
 
-    # =========================
-    # RECENT EVENTS
-    # =========================
-
     @classmethod
     def get_recent_events(
         cls,
@@ -349,12 +563,10 @@ class CorrelationService:
 
         if computer:
 
-            query = (
-                query.filter(
-                    NormalizedWindowsEvent
-                    .computer
-                    == computer
-                )
+            query = query.filter(
+                NormalizedWindowsEvent
+                .computer
+                == computer
             )
 
         if hasattr(
@@ -362,12 +574,10 @@ class CorrelationService:
             "created_at",
         ):
 
-            query = (
-                query.filter(
-                    NormalizedWindowsEvent
-                    .created_at
-                    >= cutoff
-                )
+            query = query.filter(
+                NormalizedWindowsEvent
+                .created_at
+                >= cutoff
             )
 
         rows = (
@@ -388,14 +598,13 @@ class CorrelationService:
             in rows
         ]
 
-    # =========================
-    # MATCH PROCESS
-    # =========================
-
     @classmethod
     def _matches_process(
         cls,
-        event: dict[str, Any],
+        event: dict[
+            str,
+            Any,
+        ],
         *,
         computer: str | None,
         process_guid: str | None,
@@ -437,8 +646,8 @@ class CorrelationService:
         if normalized_guid:
 
             return (
-                normalized_guid
-                == event_guid
+                event_guid
+                == normalized_guid
             )
 
         normalized_pid = (
@@ -465,10 +674,6 @@ class CorrelationService:
             normalized_pid
             == event_pid
         )
-
-    # =========================
-    # SINGLE PROCESS
-    # =========================
 
     @classmethod
     def analyze_process(
@@ -506,8 +711,12 @@ class CorrelationService:
             if cls._matches_process(
                 event,
                 computer=computer,
-                process_guid=process_guid,
-                process_id=process_id,
+                process_guid=(
+                    process_guid
+                ),
+                process_id=(
+                    process_id
+                ),
             )
         ]
 
@@ -516,6 +725,29 @@ class CorrelationService:
 
         first = (
             process_events[0]
+        )
+
+        final_username = (
+            username
+            or first.get(
+                "username"
+            )
+        )
+
+        final_image = (
+            process_image
+            or first.get(
+                "image"
+            )
+        )
+
+        final_guid = (
+            cls._normalize_guid(
+                process_guid
+            )
+            or first.get(
+                "process_guid"
+            )
         )
 
         final_pid = (
@@ -537,24 +769,20 @@ class CorrelationService:
         return (
             CorrelationEngine
             .analyze(
-                events=process_events,
-
-                username=(
-                    username
-                    or first.get(
-                        "username"
-                    )
+                events=(
+                    process_events
                 ),
 
-                computer=computer,
+                username=(
+                    final_username
+                ),
+
+                computer=(
+                    computer
+                ),
 
                 process_guid=(
-                    cls._normalize_guid(
-                        process_guid
-                    )
-                    or first.get(
-                        "process_guid"
-                    )
+                    final_guid
                 ),
 
                 process_id=(
@@ -562,10 +790,7 @@ class CorrelationService:
                 ),
 
                 process_image=(
-                    process_image
-                    or first.get(
-                        "image"
-                    )
+                    final_image
                 ),
 
                 parent_process_guid=(
@@ -588,10 +813,6 @@ class CorrelationService:
             )
         )
 
-    # =========================
-    # SAME-PROCESS PERSIST
-    # =========================
-
     @classmethod
     def process_detection(
         cls,
@@ -608,11 +829,27 @@ class CorrelationService:
         result = (
             cls.analyze_process(
                 db=db,
-                computer=computer,
-                process_guid=process_guid,
-                process_id=process_id,
-                process_image=process_image,
-                username=username,
+
+                computer=(
+                    computer
+                ),
+
+                process_guid=(
+                    process_guid
+                ),
+
+                process_id=(
+                    process_id
+                ),
+
+                process_image=(
+                    process_image
+                ),
+
+                username=(
+                    username
+                ),
+
                 window_minutes=(
                     window_minutes
                 ),
@@ -636,10 +873,6 @@ class CorrelationService:
                 result=result,
             )
         )
-
-    # =========================
-    # BUILD PROCESS TREE
-    # =========================
 
     @classmethod
     def _build_process_tree(
@@ -716,6 +949,7 @@ class CorrelationService:
                 )
                 is not None
             ):
+
                 node[
                     "process_id"
                 ] = event.get(
@@ -725,6 +959,7 @@ class CorrelationService:
             if event.get(
                 "image"
             ):
+
                 node[
                     "image"
                 ] = event.get(
@@ -734,6 +969,7 @@ class CorrelationService:
             if event.get(
                 "username"
             ):
+
                 node[
                     "username"
                 ] = event.get(
@@ -767,6 +1003,7 @@ class CorrelationService:
                     )
                     is not None
                 ):
+
                     node[
                         "parent_process_id"
                     ] = event.get(
@@ -776,13 +1013,12 @@ class CorrelationService:
                 if event.get(
                     "parent_image"
                 ):
+
                     node[
                         "parent_image"
                     ] = event.get(
                         "parent_image"
                     )
-
-        # connect child links
 
         for (
             guid,
@@ -811,6 +1047,7 @@ class CorrelationService:
                     "children"
                 ]
             ):
+
                 parent[
                     "children"
                 ].append(
@@ -818,10 +1055,6 @@ class CorrelationService:
                 )
 
         return nodes
-
-    # =========================
-    # DESCENDANTS
-    # =========================
 
     @classmethod
     def _collect_descendants(
@@ -843,7 +1076,7 @@ class CorrelationService:
         ):
             return []
 
-        descendants = []
+        result = []
 
         visited = set()
 
@@ -887,7 +1120,7 @@ class CorrelationService:
                 ):
                     continue
 
-                descendants.append(
+                result.append(
                     child_guid
                 )
 
@@ -895,11 +1128,7 @@ class CorrelationService:
                     child_guid
                 )
 
-        return descendants
-
-    # =========================
-    # ANCESTORS
-    # =========================
+        return result
 
     @classmethod
     def _collect_ancestors(
@@ -967,10 +1196,6 @@ class CorrelationService:
 
         return ancestors
 
-    # =========================
-    # TREE STRUCTURE
-    # =========================
-
     @classmethod
     def get_process_tree(
         cls,
@@ -983,7 +1208,11 @@ class CorrelationService:
         events = (
             cls.get_recent_events(
                 db=db,
-                computer=computer,
+
+                computer=(
+                    computer
+                ),
+
                 window_minutes=(
                     window_minutes
                 ),
@@ -1091,10 +1320,6 @@ class CorrelationService:
 
         return results
 
-    # =========================
-    # ANALYZE TREE
-    # =========================
-
     @classmethod
     def analyze_process_tree(
         cls,
@@ -1105,12 +1330,21 @@ class CorrelationService:
         window_minutes: int | None = None,
     ) -> CorrelationResult | None:
 
+        effective_window = (
+            window_minutes
+            or cls.DEFAULT_WINDOW_MINUTES
+        )
+
         events = (
             cls.get_recent_events(
                 db=db,
-                computer=computer,
+
+                computer=(
+                    computer
+                ),
+
                 window_minutes=(
-                    window_minutes
+                    effective_window
                 ),
             )
         )
@@ -1155,7 +1389,9 @@ class CorrelationService:
 
         for guid in (
             ancestors
-            + [root_guid]
+            + [
+                root_guid
+            ]
             + descendants
         ):
 
@@ -1163,6 +1399,7 @@ class CorrelationService:
                 guid
                 not in related_guids
             ):
+
                 related_guids.append(
                     guid
                 )
@@ -1198,7 +1435,7 @@ class CorrelationService:
                 guid
             )
 
-            if node is None:
+            if not node:
                 continue
 
             process_chain.append(
@@ -1233,29 +1470,64 @@ class CorrelationService:
                 }
             )
 
+        (
+            usb_events,
+            usb_file_transfers,
+        ) = cls.get_usb_context(
+            db=db,
+
+            computer=(
+                root.get(
+                    "computer"
+                )
+            ),
+
+            username=(
+                root.get(
+                    "username"
+                )
+            ),
+
+            window_minutes=(
+                effective_window
+            ),
+        )
+
         return (
             CorrelationEngine
             .analyze(
-                events=tree_events,
-
-                username=root.get(
-                    "username"
+                events=(
+                    tree_events
                 ),
 
-                computer=root.get(
-                    "computer"
+                username=(
+                    root.get(
+                        "username"
+                    )
                 ),
 
-                process_guid=root.get(
-                    "process_guid"
+                computer=(
+                    root.get(
+                        "computer"
+                    )
                 ),
 
-                process_id=root.get(
-                    "process_id"
+                process_guid=(
+                    root.get(
+                        "process_guid"
+                    )
                 ),
 
-                process_image=root.get(
-                    "image"
+                process_id=(
+                    root.get(
+                        "process_id"
+                    )
+                ),
+
+                process_image=(
+                    root.get(
+                        "image"
+                    )
                 ),
 
                 parent_process_guid=(
@@ -1270,19 +1542,25 @@ class CorrelationService:
                     )
                 ),
 
-                parent_image=root.get(
-                    "parent_image"
+                parent_image=(
+                    root.get(
+                        "parent_image"
+                    )
                 ),
 
                 process_chain=(
                     process_chain
                 ),
+
+                usb_events=(
+                    usb_events
+                ),
+
+                usb_file_transfers=(
+                    usb_file_transfers
+                ),
             )
         )
-
-    # =========================
-    # TREE PERSIST
-    # =========================
 
     @classmethod
     def process_tree_detection(
@@ -1297,10 +1575,15 @@ class CorrelationService:
         result = (
             cls.analyze_process_tree(
                 db=db,
+
                 process_guid=(
                     process_guid
                 ),
-                computer=computer,
+
+                computer=(
+                    computer
+                ),
+
                 window_minutes=(
                     window_minutes
                 ),
@@ -1325,10 +1608,6 @@ class CorrelationService:
             )
         )
 
-    # =========================
-    # CREATE INCIDENT FROM TREE
-    # =========================
-
     @classmethod
     def create_incident_from_tree(
         cls,
@@ -1342,10 +1621,15 @@ class CorrelationService:
         result = (
             cls.analyze_process_tree(
                 db=db,
+
                 process_guid=(
                     process_guid
                 ),
-                computer=computer,
+
+                computer=(
+                    computer
+                ),
+
                 window_minutes=(
                     window_minutes
                 ),
@@ -1385,9 +1669,7 @@ class CorrelationService:
             )
         )
 
-        correlation_evidence = (
-            None
-        )
+        correlation_evidence = None
 
         if incident is not None:
 
@@ -1410,7 +1692,9 @@ class CorrelationService:
                         or "UNKNOWN"
                     ),
 
-                    correlation=result,
+                    correlation=(
+                        result
+                    ),
                 )
             )
 
@@ -1428,10 +1712,6 @@ class CorrelationService:
                 correlation_evidence,
         }
 
-    # =========================
-    # ANALYZE ALL PROCESS TREES
-    # =========================
-
     @classmethod
     def analyze_process_trees(
         cls,
@@ -1446,7 +1726,11 @@ class CorrelationService:
         events = (
             cls.get_recent_events(
                 db=db,
-                computer=computer,
+
+                computer=(
+                    computer
+                ),
+
                 window_minutes=(
                     window_minutes
                 ),
@@ -1482,18 +1766,20 @@ class CorrelationService:
                 or parent_guid
                 not in nodes
             ):
+
                 root_guids.append(
                     guid
                 )
 
         if not root_guids:
+
             root_guids = list(
                 nodes.keys()
             )
 
         results = []
 
-        processed = set()
+        processed_guids = set()
 
         for root_guid in (
             root_guids
@@ -1501,7 +1787,7 @@ class CorrelationService:
 
             if (
                 root_guid
-                in processed
+                in processed_guids
             ):
                 continue
 
@@ -1512,11 +1798,11 @@ class CorrelationService:
                 )
             )
 
-            processed.add(
+            processed_guids.add(
                 root_guid
             )
 
-            processed.update(
+            processed_guids.update(
                 descendants
             )
 
@@ -1528,7 +1814,9 @@ class CorrelationService:
                         root_guid
                     ),
 
-                    computer=computer,
+                    computer=(
+                        computer
+                    ),
 
                     window_minutes=(
                         window_minutes
@@ -1545,23 +1833,25 @@ class CorrelationService:
         results.sort(
             key=lambda item: (
                 item.score,
+
                 len(
                     item.process_chain
                 ),
+
                 len(
                     set(
                         item.event_ids
                     )
+                ),
+
+                len(
+                    item.usb_file_transfers
                 ),
             ),
             reverse=True,
         )
 
         return results
-
-    # =========================
-    # SAME-PROCESS LIST
-    # =========================
 
     @classmethod
     def analyze_processes(
@@ -1577,7 +1867,11 @@ class CorrelationService:
         events = (
             cls.get_recent_events(
                 db=db,
-                computer=computer,
+
+                computer=(
+                    computer
+                ),
+
                 window_minutes=(
                     window_minutes
                 ),
@@ -1625,26 +1919,38 @@ class CorrelationService:
             result = (
                 CorrelationEngine
                 .analyze(
-                    events=process_events,
-
-                    username=first.get(
-                        "username"
+                    events=(
+                        process_events
                     ),
 
-                    computer=first.get(
-                        "computer"
+                    username=(
+                        first.get(
+                            "username"
+                        )
                     ),
 
-                    process_guid=first.get(
-                        "process_guid"
+                    computer=(
+                        first.get(
+                            "computer"
+                        )
                     ),
 
-                    process_id=first.get(
-                        "process_id"
+                    process_guid=(
+                        first.get(
+                            "process_guid"
+                        )
                     ),
 
-                    process_image=first.get(
-                        "image"
+                    process_id=(
+                        first.get(
+                            "process_id"
+                        )
+                    ),
+
+                    process_image=(
+                        first.get(
+                            "image"
+                        )
                     ),
 
                     parent_process_guid=(
@@ -1659,8 +1965,10 @@ class CorrelationService:
                         )
                     ),
 
-                    parent_image=first.get(
-                        "parent_image"
+                    parent_image=(
+                        first.get(
+                            "parent_image"
+                        )
                     ),
                 )
             )
@@ -1676,10 +1984,6 @@ class CorrelationService:
         )
 
         return results
-
-    # =========================
-    # BATCH PERSISTENCE
-    # =========================
 
     @classmethod
     def process_detections(
@@ -1697,7 +2001,11 @@ class CorrelationService:
         results = (
             cls.analyze_processes(
                 db=db,
-                computer=computer,
+
+                computer=(
+                    computer
+                ),
+
                 window_minutes=(
                     window_minutes
                 ),
@@ -1719,7 +2027,7 @@ class CorrelationService:
                 )
             )
 
-            if alert is not None:
+            if alert:
 
                 alerts.append(
                     alert

@@ -1,4 +1,7 @@
-from pathlib import PureWindowsPath
+from pathlib import (
+    PureWindowsPath,
+)
+
 from typing import Any
 
 from app.modules.correlation.result import (
@@ -8,21 +11,13 @@ from app.modules.correlation.result import (
 
 class CorrelationEngine:
 
-    # =========================
-    # EVENT WEIGHTS
-    # =========================
-
     EVENT_WEIGHTS = {
-        1: 10,     # Process Create
-        22: 10,    # DNS Query
-        3: 15,     # Network Connection
-        11: 20,    # File Create
-        13: 25,    # Registry Value Set
+        1: 10,
+        22: 10,
+        3: 15,
+        11: 20,
+        13: 25,
     }
-
-    # =========================
-    # EVENT SEQUENCES
-    # =========================
 
     SEQUENCE_BONUSES = {
         (
@@ -79,10 +74,6 @@ class CorrelationEngine:
         ): 50,
     }
 
-    # =========================
-    # PROCESS REPUTATION
-    # =========================
-
     TRUSTED_PROCESSES = {
         "chrome.exe",
         "msedge.exe",
@@ -134,10 +125,6 @@ class CorrelationEngine:
         "mshta.exe",
     }
 
-    # =========================
-    # DOWNLOAD FILE TYPES
-    # =========================
-
     SCRIPT_EXTENSIONS = {
         ".ps1",
         ".bat",
@@ -166,10 +153,6 @@ class CorrelationEngine:
         ".img",
     }
 
-    # =========================
-    # MITRE
-    # =========================
-
     MITRE_MAP = {
         1: [
             "T1059",
@@ -192,10 +175,6 @@ class CorrelationEngine:
         ],
     }
 
-    # =========================
-    # SEVERITY
-    # =========================
-
     @staticmethod
     def _severity(
         score: int,
@@ -211,10 +190,6 @@ class CorrelationEngine:
             return "MEDIUM"
 
         return "LOW"
-
-    # =========================
-    # PROCESS NAME
-    # =========================
 
     @staticmethod
     def _process_name(
@@ -237,10 +212,6 @@ class CorrelationEngine:
             normalized
             .split("\\")[-1]
         )
-
-    # =========================
-    # EVENT VALUE
-    # =========================
 
     @staticmethod
     def _event_value(
@@ -283,10 +254,6 @@ class CorrelationEngine:
 
         return None
 
-    # =========================
-    # EVENT SEQUENCE
-    # =========================
-
     @staticmethod
     def _has_sequence(
         event_ids: list[int],
@@ -315,10 +282,6 @@ class CorrelationEngine:
 
         return False
 
-    # =========================
-    # PROCESS CHAIN NAMES
-    # =========================
-
     @classmethod
     def _chain_process_names(
         cls,
@@ -327,7 +290,7 @@ class CorrelationEngine:
         ],
     ) -> list[str]:
 
-        names: list[str] = []
+        names = []
 
         for node in process_chain:
 
@@ -346,10 +309,6 @@ class CorrelationEngine:
 
         return names
 
-    # =========================
-    # CHAIN TRANSITION
-    # =========================
-
     @staticmethod
     def _has_process_transition(
         process_names: list[str],
@@ -357,9 +316,10 @@ class CorrelationEngine:
         child_set: set[str],
     ) -> bool:
 
-        if len(
-            process_names
-        ) < 2:
+        if (
+            len(process_names)
+            < 2
+        ):
             return False
 
         for index in range(
@@ -367,7 +327,9 @@ class CorrelationEngine:
         ):
 
             parent = (
-                process_names[index]
+                process_names[
+                    index
+                ]
             )
 
             child = (
@@ -377,16 +339,14 @@ class CorrelationEngine:
             )
 
             if (
-                parent in parent_set
-                and child in child_set
+                parent
+                in parent_set
+                and child
+                in child_set
             ):
                 return True
 
         return False
-
-    # =========================
-    # DOWNLOAD CONTEXT
-    # =========================
 
     @classmethod
     def _download_context(
@@ -401,7 +361,7 @@ class CorrelationEngine:
 
         score = 0
 
-        reasons: list[str] = []
+        reasons = []
 
         for event in events:
 
@@ -425,7 +385,9 @@ class CorrelationEngine:
                 continue
 
             normalized = (
-                str(target)
+                str(
+                    target
+                )
                 .replace(
                     "/",
                     "\\",
@@ -492,9 +454,6 @@ class CorrelationEngine:
                     "an archive or disk image"
                 )
 
-            # Count only first strong
-            # matching file to reduce
-            # Event 11 spam inflation.
             if (
                 in_downloads
                 or extension
@@ -510,10 +469,6 @@ class CorrelationEngine:
             score,
             reasons,
         )
-
-    # =========================
-    # ANALYZE
-    # =========================
 
     @classmethod
     def analyze(
@@ -539,6 +494,12 @@ class CorrelationEngine:
         process_chain: list[
             dict[str, Any]
         ] | None = None,
+        usb_events: list[
+            dict[str, Any]
+        ] | None = None,
+        usb_file_transfers: list[
+            dict[str, Any]
+        ] | None = None,
     ) -> CorrelationResult:
 
         process_chain = (
@@ -546,9 +507,15 @@ class CorrelationEngine:
             or []
         )
 
-        # =========================
-        # EMPTY
-        # =========================
+        usb_events = (
+            usb_events
+            or []
+        )
+
+        usb_file_transfers = (
+            usb_file_transfers
+            or []
+        )
 
         if not events:
 
@@ -556,49 +523,65 @@ class CorrelationEngine:
                 detected=False,
                 score=0,
                 severity="LOW",
+
                 username=username,
+
                 computer=computer,
-                process_guid=process_guid,
-                process_id=process_id,
-                process_image=process_image,
+
+                process_guid=(
+                    process_guid
+                ),
+
+                process_id=(
+                    process_id
+                ),
+
+                process_image=(
+                    process_image
+                ),
+
                 parent_process_guid=(
                     parent_process_guid
                 ),
+
                 parent_process_id=(
                     parent_process_id
                 ),
+
                 parent_image=(
                     parent_image
                 ),
+
                 process_chain=(
                     process_chain
                 ),
-            )
 
-        # =========================
-        # EVENT IDS
-        # =========================
+                usb_events=(
+                    usb_events
+                ),
+
+                usb_file_transfers=(
+                    usb_file_transfers
+                ),
+            )
 
         event_ids = [
             int(
-                event["event_id"]
-            )
-            for event in events
-            if (
-                event.get(
+                event[
                     "event_id"
-                )
-                is not None
+                ]
             )
+            for event
+            in events
+            if event.get(
+                "event_id"
+            )
+            is not None
         ]
 
         unique_event_ids = set(
             event_ids
         )
-
-        # =========================
-        # PROCESS CONTEXT
-        # =========================
 
         process_name = (
             cls._process_name(
@@ -620,12 +603,12 @@ class CorrelationEngine:
 
         score = 0
 
-        reasons: list[str] = []
+        reasons = []
 
-        mitre: set[str] = set()
+        mitre = set()
 
         # =========================
-        # BASE EVENT SCORE
+        # BASE EVENTS
         # =========================
 
         for event_id in (
@@ -633,7 +616,8 @@ class CorrelationEngine:
         ):
 
             points = (
-                cls.EVENT_WEIGHTS.get(
+                cls.EVENT_WEIGHTS
+                .get(
                     event_id,
                     0,
                 )
@@ -649,7 +633,8 @@ class CorrelationEngine:
                 )
 
             for technique in (
-                cls.MITRE_MAP.get(
+                cls.MITRE_MAP
+                .get(
                     event_id,
                     [],
                 )
@@ -660,7 +645,7 @@ class CorrelationEngine:
                 )
 
         # =========================
-        # EVENT SEQUENCE
+        # SEQUENCE
         # =========================
 
         best_sequence = None
@@ -687,7 +672,9 @@ class CorrelationEngine:
                     sequence
                 )
 
-                best_bonus = bonus
+                best_bonus = (
+                    bonus
+                )
 
         if best_sequence:
 
@@ -708,7 +695,7 @@ class CorrelationEngine:
             )
 
         # =========================
-        # STAGE COUNT
+        # STAGES
         # =========================
 
         stage_count = len(
@@ -760,7 +747,7 @@ class CorrelationEngine:
             )
 
         # =========================
-        # HIGH-RISK PROCESS
+        # HIGH RISK PROCESS
         # =========================
 
         if (
@@ -777,12 +764,15 @@ class CorrelationEngine:
             )
 
         # =========================
-        # TREE PRESENT
+        # TREE
         # =========================
 
-        if len(
-            process_chain
-        ) >= 2:
+        if (
+            len(
+                process_chain
+            )
+            >= 2
+        ):
 
             score += 10
 
@@ -818,9 +808,6 @@ class CorrelationEngine:
                 "T1059"
             )
 
-        # Direct parent context can
-        # still detect relationship if
-        # parent node fell outside window.
         elif (
             parent_process_name
             in cls.OFFICE_PROCESSES
@@ -885,11 +872,12 @@ class CorrelationEngine:
             )
 
         # =========================
-        # TREE DNS
+        # TREE ACTIVITY
         # =========================
 
         if (
-            len(process_chain) >= 2
+            len(process_chain)
+            >= 2
             and 22
             in unique_event_ids
         ):
@@ -901,12 +889,9 @@ class CorrelationEngine:
                 "performed DNS activity"
             )
 
-        # =========================
-        # TREE NETWORK
-        # =========================
-
         if (
-            len(process_chain) >= 2
+            len(process_chain)
+            >= 2
             and 3
             in unique_event_ids
         ):
@@ -918,12 +903,9 @@ class CorrelationEngine:
                 "performed network activity"
             )
 
-        # =========================
-        # TREE FILE
-        # =========================
-
         if (
-            len(process_chain) >= 2
+            len(process_chain)
+            >= 2
             and 11
             in unique_event_ids
         ):
@@ -935,12 +917,9 @@ class CorrelationEngine:
                 "created files"
             )
 
-        # =========================
-        # TREE REGISTRY
-        # =========================
-
         if (
-            len(process_chain) >= 2
+            len(process_chain)
+            >= 2
             and 13
             in unique_event_ids
         ):
@@ -972,13 +951,16 @@ class CorrelationEngine:
             )
 
         # =========================
-        # DOWNLOAD CONTEXT
+        # DOWNLOAD
         # =========================
 
-        download_score, (
-            download_reasons
-        ) = cls._download_context(
-            events
+        (
+            download_score,
+            download_reasons,
+        ) = (
+            cls._download_context(
+                events
+            )
         )
 
         score += (
@@ -990,17 +972,19 @@ class CorrelationEngine:
         )
 
         # =========================
-        # HIGH CONFIDENCE CHAIN
+        # HIGH CONFIDENCE PROCESS CHAIN
         # =========================
 
         if (
-            len(process_chain) >= 2
+            len(process_chain)
+            >= 2
             and (
                 office_to_script
                 or script_to_lolbin
             )
             and (
-                3 in unique_event_ids
+                3
+                in unique_event_ids
                 or 22
                 in unique_event_ids
             )
@@ -1017,14 +1001,182 @@ class CorrelationEngine:
             )
 
         # =========================
+        # USB CONNECT
+        # =========================
+
+        usb_connected = any(
+            event.get(
+                "event_type"
+            )
+            == (
+                "USB_DEVICE_CONNECTED"
+            )
+
+            for event
+            in usb_events
+        )
+
+        if usb_connected:
+
+            score += 5
+
+            reasons.append(
+                "Removable USB storage "
+                "was connected during "
+                "the behavior window"
+            )
+
+        # =========================
+        # USB FILE TRANSFER
+        # =========================
+
+        if usb_file_transfers:
+
+            score += 20
+
+            reasons.append(
+                "Files were transferred "
+                "to removable USB storage"
+            )
+
+            mitre.add(
+                "T1052.001"
+            )
+
+        # =========================
+        # HIGH RISK USB
+        # =========================
+
+        high_risk_usb_transfer = any(
+            (
+                transfer.get(
+                    "risk_score",
+                    0,
+                )
+                or 0
+            )
+            >= 61
+
+            for transfer
+            in usb_file_transfers
+        )
+
+        if high_risk_usb_transfer:
+
+            score += 20
+
+            reasons.append(
+                "High-risk file type "
+                "or large file was "
+                "transferred to "
+                "removable storage"
+            )
+
+        # =========================
+        # DOWNLOAD -> USB
+        # =========================
+
+        if (
+            download_score > 0
+            and usb_file_transfers
+        ):
+
+            score += 20
+
+            reasons.append(
+                "Downloaded or suspicious "
+                "file activity was followed "
+                "by USB file transfer"
+            )
+
+        # =========================
+        # NETWORK -> USB
+        # =========================
+
+        if (
+            (
+                3
+                in unique_event_ids
+                or 22
+                in unique_event_ids
+            )
+            and usb_file_transfers
+        ):
+
+            score += 15
+
+            reasons.append(
+                "Network activity and "
+                "removable-media transfer "
+                "occurred in the same "
+                "behavior window"
+            )
+
+        # =========================
+        # EXECUTION -> USB
+        # =========================
+
+        if (
+            (
+                process_name
+                in cls.HIGH_RISK_PROCESSES
+                or office_to_script
+                or script_to_lolbin
+            )
+            and usb_file_transfers
+        ):
+
+            score += 20
+
+            reasons.append(
+                "Suspicious execution "
+                "chain was followed by "
+                "file transfer to "
+                "removable media"
+            )
+
+        # =========================
+        # EXFILTRATION CHAIN
+        # =========================
+
+        if (
+            len(process_chain)
+            >= 2
+            and usb_connected
+            and usb_file_transfers
+            and (
+                3
+                in unique_event_ids
+                or 22
+                in unique_event_ids
+                or download_score > 0
+            )
+        ):
+
+            score += 25
+
+            reasons.append(
+                "High-confidence "
+                "removable media "
+                "exfiltration chain "
+                "observed"
+            )
+
+            mitre.add(
+                "T1052.001"
+            )
+
+        # =========================
         # TRUSTED PROCESS
         # =========================
 
         if (
             process_name
             in cls.TRUSTED_PROCESSES
-            and len(process_chain)
-            <= 1
+            and len(
+                process_chain
+            ) <= 1
+            and not usb_file_transfers
         ):
 
             score -= 20
@@ -1034,10 +1186,6 @@ class CorrelationEngine:
                 "from commonly trusted "
                 f"process {process_name}"
             )
-
-        # =========================
-        # NORMAL NETWORK
-        # =========================
 
         normal_network_chain = {
             1,
@@ -1055,6 +1203,7 @@ class CorrelationEngine:
             and len(
                 process_chain
             ) <= 1
+            and not usb_file_transfers
         ):
 
             score = min(
@@ -1068,25 +1217,18 @@ class CorrelationEngine:
                 "network activity"
             )
 
-        # =========================
-        # SINGLE EVENT
-        # =========================
-
         if (
             stage_count == 1
             and len(
                 process_chain
             ) <= 1
+            and not usb_file_transfers
         ):
 
             score = min(
                 score,
                 25,
             )
-
-        # =========================
-        # DNS + NETWORK ONLY
-        # =========================
 
         if (
             unique_event_ids
@@ -1099,6 +1241,7 @@ class CorrelationEngine:
             and len(
                 process_chain
             ) <= 1
+            and not usb_file_transfers
         ):
 
             score = min(
@@ -1111,10 +1254,6 @@ class CorrelationEngine:
                 "without additional "
                 "suspicious behavior"
             )
-
-        # =========================
-        # CLAMP
-        # =========================
 
         score = max(
             0,
@@ -1154,31 +1293,67 @@ class CorrelationEngine:
 
         return CorrelationResult(
             detected=detected,
+
             score=score,
+
             severity=severity,
+
             username=username,
+
             computer=computer,
-            process_guid=process_guid,
-            process_id=process_id,
-            process_image=process_image,
+
+            process_guid=(
+                process_guid
+            ),
+
+            process_id=(
+                process_id
+            ),
+
+            process_image=(
+                process_image
+            ),
+
             parent_process_guid=(
                 parent_process_guid
             ),
+
             parent_process_id=(
                 parent_process_id
             ),
+
             parent_image=(
                 parent_image
             ),
-            event_ids=event_ids,
+
+            event_ids=(
+                event_ids
+            ),
+
             process_chain=(
                 process_chain
             ),
+
             related_process_guids=(
                 related_process_guids
             ),
-            reasons=reasons,
-            events=events,
+
+            usb_events=(
+                usb_events
+            ),
+
+            usb_file_transfers=(
+                usb_file_transfers
+            ),
+
+            reasons=(
+                reasons
+            ),
+
+            events=(
+                events
+            ),
+
             mitre_techniques=sorted(
                 mitre
             ),

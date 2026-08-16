@@ -12,6 +12,7 @@ from app.models.login_event import LoginEvent
 from app.models.raw_windows_event import RawWindowsEvent
 from app.models.risk_assessment import RiskAssessment
 from app.models.user import User
+from app.models.usb_event import UsbEvent
 
 
 def init_db() -> None:

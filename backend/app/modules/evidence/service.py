@@ -1,7 +1,9 @@
 import hashlib
 import json
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import (
+    Session,
+)
 
 from app.models.evidence import (
     Evidence,
@@ -14,24 +16,19 @@ from app.modules.blockchain.service import (
 
 class EvidenceService:
 
-    # =========================
-    # HASH
-    # =========================
-
     @staticmethod
     def _hash_snapshot(
         snapshot_text: str,
     ) -> str:
 
-        return hashlib.sha256(
-            snapshot_text.encode(
-                "utf-8"
+        return (
+            hashlib.sha256(
+                snapshot_text.encode(
+                    "utf-8"
+                )
             )
-        ).hexdigest()
-
-    # =========================
-    # CREATE SNAPSHOT
-    # =========================
+            .hexdigest()
+        )
 
     @classmethod
     def create_snapshot(
@@ -45,10 +42,12 @@ class EvidenceService:
         ),
     ) -> Evidence:
 
-        snapshot_text = json.dumps(
-            snapshot,
-            sort_keys=True,
-            default=str,
+        snapshot_text = (
+            json.dumps(
+                snapshot,
+                sort_keys=True,
+                default=str,
+            )
         )
 
         sha256_hash = (
@@ -58,11 +57,25 @@ class EvidenceService:
         )
 
         evidence = Evidence(
-            incident_id=incident_id,
-            username=username,
-            evidence_type=evidence_type,
-            snapshot_json=snapshot_text,
-            sha256_hash=sha256_hash,
+            incident_id=(
+                incident_id
+            ),
+
+            username=(
+                username
+            ),
+
+            evidence_type=(
+                evidence_type
+            ),
+
+            snapshot_json=(
+                snapshot_text
+            ),
+
+            sha256_hash=(
+                sha256_hash
+            ),
         )
 
         db.add(
@@ -75,30 +88,19 @@ class EvidenceService:
             evidence
         )
 
-        # =========================
-        # BLOCKCHAIN SEAL
-        # =========================
-        #
-        # EvidenceService is the
-        # single owner of evidence
-        # blockchain sealing.
-        #
-        # Do NOT seal again from
-        # IncidentService.
-
         BlockchainService.create_block(
             db=db,
-            evidence_id=evidence.id,
+
+            evidence_id=(
+                evidence.id
+            ),
+
             evidence_hash=(
                 evidence.sha256_hash
             ),
         )
 
         return evidence
-
-    # =========================
-    # CREATE FROM INCIDENT
-    # =========================
 
     @classmethod
     def create_from_incident(
@@ -139,22 +141,28 @@ class EvidenceService:
                 incident.closed_at,
         }
 
-        return cls.create_snapshot(
-            db=db,
-            incident_id=incident.id,
-            username=(
-                incident.username
-                or "UNKNOWN"
-            ),
-            snapshot=snapshot,
-            evidence_type=(
-                "INCIDENT_SNAPSHOT"
-            ),
-        )
+        return (
+            cls.create_snapshot(
+                db=db,
 
-    # =========================
-    # CORRELATION SNAPSHOT
-    # =========================
+                incident_id=(
+                    incident.id
+                ),
+
+                username=(
+                    incident.username
+                    or "UNKNOWN"
+                ),
+
+                snapshot=(
+                    snapshot
+                ),
+
+                evidence_type=(
+                    "INCIDENT_SNAPSHOT"
+                ),
+            )
+        )
 
     @classmethod
     def create_correlation_snapshot(
@@ -227,24 +235,37 @@ class EvidenceService:
 
             "events":
                 correlation.events,
+
+            "usb_events":
+                correlation.usb_events,
+
+            "usb_file_transfers":
+                correlation
+                .usb_file_transfers,
         }
 
-        return cls.create_snapshot(
-            db=db,
-            incident_id=incident_id,
-            username=(
-                username
-                or "UNKNOWN"
-            ),
-            snapshot=snapshot,
-            evidence_type=(
-                "CORRELATION_SNAPSHOT"
-            ),
-        )
+        return (
+            cls.create_snapshot(
+                db=db,
 
-    # =========================
-    # GET EVIDENCE
-    # =========================
+                incident_id=(
+                    incident_id
+                ),
+
+                username=(
+                    username
+                    or "UNKNOWN"
+                ),
+
+                snapshot=(
+                    snapshot
+                ),
+
+                evidence_type=(
+                    "CORRELATION_SNAPSHOT"
+                ),
+            )
+        )
 
     @staticmethod
     def get_evidence(
@@ -263,10 +284,6 @@ class EvidenceService:
             .first()
         )
 
-    # =========================
-    # INCIDENT EVIDENCE
-    # =========================
-
     @staticmethod
     def get_incident_evidence(
         db: Session,
@@ -282,14 +299,11 @@ class EvidenceService:
                 == incident_id
             )
             .order_by(
-                Evidence.created_at.desc()
+                Evidence.created_at
+                .desc()
             )
             .all()
         )
-
-    # =========================
-    # VERIFY
-    # =========================
 
     @classmethod
     def verify_evidence(
@@ -308,6 +322,7 @@ class EvidenceService:
 
         return (
             calculated_hash,
+
             calculated_hash
             == evidence.sha256_hash,
         )
